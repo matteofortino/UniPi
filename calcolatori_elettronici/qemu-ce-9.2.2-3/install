@@ -1,0 +1,69 @@
+#!/bin/sh
+if [ -z "$PREFIX" ]; then
+	PREFIX="$HOME/CE"
+fi
+VERS=9.2.2
+
+system=`uname -s`
+case "$system" in
+	Darwin)	libs="--enable-cocoa" ;;
+	*)	libs="--enable-gtk --audio-drv-list=pa";;
+esac
+
+echo "Scarico QEMU v$VERS..."
+[ -e qemu-$VERS.tar.xz ] || wget https://download.qemu.org/qemu-$VERS.tar.xz
+
+echo "Estraggo i sorgenti..."
+rm -rf qemu-$VERS
+tar xf qemu-$VERS.tar.xz
+
+cd qemu-$VERS
+
+echo "Applico le patch..."
+for f in ../*.patch; do 
+	patch -p1 < $f
+done
+
+echo "Configuro..."
+./configure \
+	--target-list=x86_64-softmmu \
+	--disable-user \
+	--disable-guest-agent \
+	--disable-gnutls \
+	--disable-sdl \
+	--disable-nettle \
+	--disable-gcrypt \
+	--disable-auth-pam \
+	--disable-vnc \
+	--disable-virtfs \
+	--disable-libudev \
+	--disable-mpath \
+	--disable-xen \
+	--disable-brlapi \
+	--disable-curl \
+	--disable-rdma \
+	--disable-vde \
+	--disable-netmap \
+	--disable-attr \
+	--disable-vhost-net \
+	--disable-vhost-crypto \
+	--disable-vhost-kernel \
+	--disable-vhost-user \
+	--disable-vhost-user-blk-server \
+	--disable-vhost-vdpa \
+	--disable-spice \
+	--disable-libusb \
+	--disable-replication \
+	--disable-bochs \
+	--enable-curses \
+	--disable-slirp \
+	--enable-debug \
+	$libs \
+	--disable-capstone \
+	--prefix=$PREFIX \
+
+echo "Costruisco..."
+make -j `nproc`
+
+echo "Installo..."
+make install || sudo make install

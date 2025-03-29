@@ -1,0 +1,25 @@
+From 0e5e01ce1a8a696575aedb91523986903d02b96c Mon Sep 17 00:00:00 2001
+From: Giuseppe Lettieri <giuseppe.lettieri@unipi.it>
+Date: Tue, 25 Feb 2025 19:15:28 +0100
+Subject: [PATCH 4/4] pulseaudio: don't look for pidfile in wsl
+
+---
+ audio/paaudio.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/audio/paaudio.c b/audio/paaudio.c
+index f3193b08c3..5afff027a8 100644
+--- a/audio/paaudio.c
++++ b/audio/paaudio.c
+@@ -827,7 +827,7 @@ static void *qpa_audio_init(Audiodev *dev, Error **errp)
+ 
+     assert(dev->driver == AUDIODEV_DRIVER_PA);
+ 
+-    if (!popts->server) {
++    if (!popts->server && !getenv("PULSE_SERVER")) {
+         char pidfile[64];
+         char *runtime;
+         struct stat st;
+-- 
+2.43.0
+

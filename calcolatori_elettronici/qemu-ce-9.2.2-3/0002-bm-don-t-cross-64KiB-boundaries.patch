@@ -1,0 +1,35 @@
+From d8a37cdc73a9960ad3c13a94c2b52f0fbf70f457 Mon Sep 17 00:00:00 2001
+From: Giuseppe Lettieri <g.lettieri@iet.unipi.it>
+Date: Tue, 29 Dec 2020 12:02:50 +0100
+Subject: [PATCH 2/3] bm: don't cross 64KiB boundaries
+
+---
+ hw/ide/pci.c | 12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
+
+diff --git a/hw/ide/pci.c b/hw/ide/pci.c
+index a008fe7316..b6afad4d36 100644
+--- a/hw/ide/pci.c
++++ b/hw/ide/pci.c
+@@ -258,7 +258,17 @@ static int32_t bmdma_prepare_buf(const IDEDMA *dma, int32_t limit)
+              * PRDs from the guest, but ignore them. */
+             sg_len = MIN(limit - s->sg.size, bm->cur_prd_len);
+             if (sg_len) {
+-                qemu_sglist_add(&s->sg, bm->cur_prd_addr, sg_len);
++                /* wrap around if the transfer crosses a 64KiB boundary */
++                uint64_t next_boundary =
++                    (bm->cur_prd_addr + 0x10000) & ~0xFFFF;
++                int delta = next_boundary - bm->cur_prd_addr;
++                if (delta < sg_len) {
++                    qemu_sglist_add(&s->sg, bm->cur_prd_addr, delta);
++                    qemu_sglist_add(&s->sg, bm->cur_prd_addr & ~0xFFFF,
++                            sg_len - delta);
++                } else {
++                    qemu_sglist_add(&s->sg, bm->cur_prd_addr, sg_len);
++                }
+             }
+ 
+             bm->cur_prd_addr += l;
+-- 
+2.45.2
+

@@ -1,0 +1,557 @@
+From 87da1331cf709c24870b106a370bab83db5ac3b8 Mon Sep 17 00:00:00 2001
+From: Giuseppe Lettieri <g.lettieri@iet.unipi.it>
+Date: Tue, 22 Dec 2020 10:46:37 +0100
+Subject: [PATCH 1/3] CE device
+
+---
+ hw/misc/Kconfig     |   5 +
+ hw/misc/ce.c        | 509 ++++++++++++++++++++++++++++++++++++++++++++
+ hw/misc/meson.build |   1 +
+ 3 files changed, 515 insertions(+)
+ create mode 100644 hw/misc/ce.c
+
+diff --git a/hw/misc/Kconfig b/hw/misc/Kconfig
+index 1f1baa5dde..cd5d8142bc 100644
+--- a/hw/misc/Kconfig
++++ b/hw/misc/Kconfig
+@@ -30,6 +30,11 @@ config EDU
+     default y if TEST_DEVICES
+     depends on PCI && MSI_NONBROKEN
+ 
++config CE
++    bool
++    default y
++    depends on PCI
++
+ config PCA9552
+     bool
+     depends on I2C
+diff --git a/hw/misc/ce.c b/hw/misc/ce.c
+new file mode 100644
+index 0000000000..562b0d5399
+--- /dev/null
++++ b/hw/misc/ce.c
+@@ -0,0 +1,509 @@
++/*
++ * Copyright (c) 2015 Giuseppe Lettieri
++ *
++ * Permission is hereby granted, free of charge, to any person obtaining a
++ * copy of this software and associated documentation files (the "Software"),
++ * to deal in the Software without restriction, including without limitation
++ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
++ * and/or sell copies of the Software, and to permit persons to whom the
++ * Software is furnished to do so, subject to the following conditions:
++ *
++ * The above copyright notice and this permission notice shall be included in
++ * all copies or substantial portions of the Software.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
++ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
++ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
++ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
++ * DEALINGS IN THE SOFTWARE.
++ */
++
++//#include "qemu/timer.h"
++//#include "qemu/main-loop.h" /* iothread mutex */
++#include "qemu/osdep.h"
++#include "qapi/error.h"
++#include "qemu/cutils.h"
++#include "hw/hw.h"
++#include "hw/i386/pc.h"
++#include "hw/pci/pci.h"
++#include "hw/pci/msi.h"
++#include "hw/pci/msix.h"
++#include "hw/qdev-properties.h"
++#include "hw/qdev-properties-system.h"
++#include "qemu/error-report.h"
++#include "qapi/qmp/json-parser.h"
++#include "qapi/qmp/qerror.h"
++#include "qapi/qmp/qjson.h"
++#include "qapi/qmp/qnum.h"
++#include "qapi/qmp/qdict.h"
++#include "qapi/qmp/qstring.h"
++#include "qapi/qmp/qlist.h"
++#include "chardev/char-fe.h"
++#include "sysemu/dma.h"
++#include <stdio.h>
++#include <stdarg.h>
++
++#define TYPE_PCI_CE_DEVICE "ce"
++typedef struct CEState CEState;
++DECLARE_INSTANCE_CHECKER(CEState, CE, TYPE_PCI_CE_DEVICE);
++
++#define PCI_CE_DEVICE_ID    0xedce
++#define CE_BUFSZ        4096
++
++struct ce_parser_state {
++    void *ce;
++    JSONMessageParser parser;
++    bool return_ok;
++    uint64_t return_value;
++    bool is_async;
++};
++
++struct ce_bar {
++    void *ce;
++    MemoryRegion mr;
++};
++
++struct CEState {
++    PCIDevice pdev;
++    struct ce_bar bars[6];
++    int next_bar;
++    struct ce_parser_state pstate[2];
++    bool initialized;
++    int fd_in;
++    int fd_out;
++    CharBackend chr;
++
++    char *ctrl;
++};
++
++    static int __attribute__((format(gnu_printf,2,3)))
++ce_out(struct ce_parser_state *s, const char *fmt, ...)
++{
++    va_list ap;
++    CEState *ce = s->ce;
++    int n, rv;
++    char buf[CE_BUFSZ];
++
++    va_start(ap, fmt);
++    n = vsnprintf(buf, CE_BUFSZ, fmt, ap);
++    va_end(ap);
++
++    if (n < 0) {
++        fprintf(stderr, "ce_out: error in message formatting: %s\n", strerror(errno));
++        return n;
++    }
++
++    if (n >= CE_BUFSZ) {
++        fprintf(stderr, "ce_out: message truncated, not sent\n");
++        return -1;
++    }
++
++    if (s->is_async) {
++        qemu_chr_fe_printf(&ce->chr, "%s", buf);
++        return n;
++    }
++
++
++    for (;;) {
++        errno = 0;
++        bql_unlock();
++        rv = write(ce->fd_out, (uint8_t *)buf, n);
++        bql_lock();
++        if (rv >= 0)
++            break;
++        if (errno != EAGAIN) {
++            fprintf(stderr, "ce_out: error during write: %s\n", strerror(errno));
++            return rv;
++        }
++        fprintf(stderr, "ce_out: retrying...\n");
++        sleep(1);
++    }
++    return rv;
++}
++
++#define ce_err(p, fmt, ...)  ce_out(p, "{ \"error\" : \"" fmt "\" }\n", ##__VA_ARGS__)
++
++    static uint64_t
++ce_get_reply(struct ce_parser_state *s)
++{
++    uint8_t buf;
++    CEState *ce = s->ce;
++    int n;
++
++    s->return_ok = false;
++    while (!s->return_ok) {
++again:
++        bql_unlock();
++        n = read(ce->fd_in, &buf, 1);
++        bql_lock();
++        if (n <= 0) {
++            if (n < 0 && errno != EAGAIN) {
++                fprintf(stderr, "qemu_chr_fe_read_all(): %s\n", strerror(errno));
++                s->return_value = (uint64_t)-1;
++                break;
++            }
++            fprintf(stderr, "ce_get_reply: n %d, errno %d (%s): retrying...\n",
++                    n, errno, strerror(errno));
++            sleep(1);
++            goto again;
++        }
++        json_message_parser_feed(&s->parser, (const char *)&buf, 1);
++    }
++    return s->return_value;
++}
++
++static uint64_t ce_io_read(void *opaque, hwaddr addr, unsigned size)
++{
++    struct ce_bar *b = opaque;
++    CEState *ce = b->ce;
++    struct ce_parser_state *s = &ce->pstate[0];
++
++    //fprintf(stderr, "read %u bytes from %s:%lx\n", size, b->mr.name, addr);
++    ce_out(s, "{ \"read\": { \"bar\": \"%s\", \"addr\": %ld, \"size\": %d } }\n",
++            b->mr.name, addr, size);
++    //fprintf(stderr, "waiting for reply...");
++    return ce_get_reply(s);
++}
++
++static void ce_io_write(void *opaque, hwaddr addr, uint64_t val,
++        unsigned size)
++{
++    struct ce_bar *b = opaque;
++    CEState *ce = b->ce;
++    struct ce_parser_state *s = &ce->pstate[0];
++
++    //fprintf(stderr, "write %lx in %u bytes starting at %s:%lx\n", val, size, b->mr.name, addr);
++
++    ce_out(s, "{ \"write\": { \"bar\": \"%s\", \"addr\": %ld, \"size\": %d, \"val\": %ld } }\n",
++            b->mr.name, addr, size, val);
++    ce_get_reply(s);
++    return;
++}
++
++static const MemoryRegionOps ce_io_ops = {
++    .read = ce_io_read,
++    .write = ce_io_write,
++    .endianness = DEVICE_NATIVE_ENDIAN,
++};
++
++static int ce_can_read(void *opaque)
++{
++    return 1;
++}
++
++static void ce_read(void *opaque, const uint8_t *buf, int size)
++{
++    struct ce_parser_state *s = opaque;
++    json_message_parser_feed(&s->parser, (const char *) buf, size);
++}
++
++static void ce_init_bar(CEState *ce, const char *name, size_t size, uint8_t type)
++{
++    struct ce_bar *b;
++
++    if (ce->next_bar >= 6) {
++        error_report("too many BARs");
++        exit(1);
++    }
++    b = &ce->bars[ce->next_bar];
++    b->ce = ce;
++    memory_region_init_io(&b->mr, OBJECT(ce), &ce_io_ops, b, name, size);
++    pci_register_bar(&ce->pdev, ce->next_bar, type, &b->mr);
++    ce->next_bar++;
++}
++
++static void ce_handle_command(void *opaque, QObject *req, Error *err)
++{
++    const QDictEntry *ent;
++    QDict *dict;
++    struct ce_parser_state *s = opaque;
++    CEState *ce = s->ce;
++    char *cmd;
++
++    dict = qobject_to(QDict, req);
++    if (!dict) {
++        ce_err(s, "not a JSON object");
++        return;
++    }
++    for (ent = qdict_first(dict); ent; ent = qdict_next(dict, ent)) {
++        const char *arg_name = qdict_entry_key(ent);
++        const QObject *arg_obj = qdict_entry_value(ent);
++
++        if (strcmp(arg_name, "return") == 0) {
++            QNum *qi = qobject_to(QNum, arg_obj);
++            if (qi == NULL) {
++                ce_err(s, "missing or invalid return value");
++                goto out;
++            }
++            s->return_value = qnum_get_int(qi);
++            s->return_ok = true;
++        } else if (strcmp(arg_name, "dma-read") == 0) {
++            dma_addr_t addr, len, i;
++            QDict *args = qobject_to(QDict, arg_obj);
++            uint8_t *buf;
++            GString *str;
++
++            if (args == NULL) {
++                ce_err(s, "missing or invalid args");
++                goto out;
++            }
++            addr = qdict_get_try_int(args, "addr", ~1L);
++            if (addr == ~1L) {
++                ce_err(s, "missing or invalid addr");
++                goto out;
++            } 
++            len = qdict_get_try_int(args, "len", ~1L);
++            if (len == ~1L) {
++                ce_err(s, "missing or invalid len");
++                goto out;
++            } 
++            if (len == 0) {
++                ce_out(s, "{ \"bytes\" : [] }");
++                goto out;
++            }
++            buf = g_malloc(len);
++            dma_memory_read(&address_space_memory, addr, buf, len, MEMTXATTRS_UNSPECIFIED);
++            str = g_string_new("{ \"bytes\" : [ ");
++            for (i = 0; i < len; i++) {
++                if (i)
++                    g_string_append(str, ", ");
++                g_string_append_printf(str, "%d", buf[i]);
++            }
++            g_free(buf);
++            g_string_append(str, " ] }");
++            cmd = g_string_free(str, FALSE);
++            ce_out(s, "%s\n", cmd);
++            g_free(cmd);
++        } else if (strcmp(arg_name, "dma-write") == 0) {
++            dma_addr_t addr, len;
++            QDict *args = qobject_to(QDict, arg_obj);
++            uint8_t *buf, *start;
++            QList *list;
++            QListEntry *entry;
++            QObject *obj;
++
++            if (args == NULL) {
++                ce_err(s, "missing or invalid args");
++                goto out;
++            }
++            addr = qdict_get_try_int(args, "addr", ~1L);
++            if (addr == ~1L) {
++                ce_err(s, "missing or invalid addr");
++                goto out;
++            } 
++            len = qdict_get_try_int(args, "len", ~1L);
++            if (len == ~1L) {
++                ce_err(s, "missing or invalid len");
++                goto out;
++            } 
++            if (len == 0) {
++                ce_out(s, "{}\n");
++                goto out;
++            }
++            obj = qdict_get(args, "bytes");
++            if (obj == NULL || qobject_type(obj) != QTYPE_QLIST) {
++                ce_err(s, "missing bytes");
++                goto out;
++            }
++            list = qobject_to(QList, obj);
++            start = buf = g_malloc0(len);
++            QLIST_FOREACH_ENTRY(list, entry) {
++                QNum *i = qobject_to(QNum, qlist_entry_obj(entry));
++                int v;
++                if (i == NULL) {
++                    ce_err(s, "not an integer");
++                    goto out;
++                }
++                v = qnum_get_int(i);
++                if (v < 0 || v > 255) {
++                    ce_err(s, "out of range: %d", v);
++                    goto out;
++                }
++                *buf++ = v;
++            }
++            if (buf == start + len) {
++                dma_memory_write(&address_space_memory, addr, start, len, MEMTXATTRS_UNSPECIFIED);
++                ce_out(s, "{}\n");
++            } else {
++                ce_err(s, "len/bytes mismatch");
++            }
++            g_free(start);
++        } else if (strcmp(arg_name, "raise-irq") == 0) {
++            pci_set_irq(&ce->pdev, 1);
++            ce_out(s, "{}\n");
++        } else if (strcmp(arg_name, "lower-irq") == 0) {
++            pci_set_irq(&ce->pdev, 0);
++            ce_out(s, "{}\n");
++        } else if (strcmp(arg_name, "bars") == 0) {
++            QList *bars = qobject_to(QList, arg_obj);
++            QObject *_bar;
++
++            printf("bars...\n");
++
++            if (ce->initialized) {
++                ce_err(s, "already initialized");
++                goto out;
++            }
++            if (bars == NULL) {
++                ce_err(s, "missing or invalid BARs");
++                goto out;
++            }
++            while ( (_bar = qlist_pop(bars)) ) {
++                QDict *bar = qobject_to(QDict, _bar);
++                const char *name, *_type;
++                uint64_t size;
++                uint8_t type = PCI_BASE_ADDRESS_SPACE_IO;
++
++                if (bar == NULL) {
++                    ce_err(s, "invalid BAR");
++                    break;
++                }
++                name = qdict_get_try_str(bar, "name");
++                if (name == NULL) {
++                    ce_err(s, "missing BAR name");
++                    break;
++                }
++                size = qdict_get_try_int(bar, "size", 0);
++                if (size == 0) {
++                    ce_err(s, "missing or invalid BAR size");
++                    break;
++                }
++                _type = qdict_get_try_str(bar, "type");
++                if (_type) {
++                    if (strcmp(_type, "io") == 0) {
++                        type = PCI_BASE_ADDRESS_SPACE_IO;
++                    } else if (strcmp(_type, "mmio") == 0) {
++                        type = PCI_BASE_ADDRESS_SPACE_MEMORY;
++                    } else {
++                        ce_err(s, "unknown BAR type: %s", _type);
++                        break;
++                    }
++                }
++                ce_init_bar(ce, name, size, type);
++            }
++        } else if (strcmp(arg_name, "interrupt-pin") == 0) {
++            QNum *pin;
++
++            if (ce->initialized) {
++                ce_err(s, "already initialized");
++                goto out;
++            }
++            pin = qobject_to(QNum, arg_obj);
++            if (pin == NULL) {
++                ce_err(s, "missing or invalid interrupt pin");
++                break;
++            }
++            ce->pdev.config[PCI_INTERRUPT_PIN] = qnum_get_int(pin); /* interrupt pin A */
++        } else {
++            ce_err(s, "unknown command: '%s'", arg_name);
++        }
++    }
++out:
++    qobject_unref(dict);
++}
++
++static void ce_init_parser(struct ce_parser_state *s, CEState *ce, bool async)
++{
++    s->ce = ce;
++    s->is_async = async;
++    json_message_parser_init(&s->parser, ce_handle_command, s, NULL);
++}
++
++static void pci_ce_realize(PCIDevice *pdev, Error **errp)
++{
++    CEState *ce = CE(pdev);
++    struct ce_parser_state *s = &ce->pstate[0];
++    char buf[CE_BUFSZ];
++    int n;
++
++    if (ce->ctrl == NULL) {
++        ce->ctrl = g_strdup(pdev->qdev.id);
++    }
++
++    n = snprintf(buf, CE_BUFSZ, "%s.out", ce->ctrl);
++    if (n < 0 || n >= CE_BUFSZ) {
++        error_setg(errp, "'%s' invalid or too long", ce->ctrl);
++    }
++    fprintf(stderr, "%s: opening %s...", pdev->qdev.id, buf);
++    ce->fd_out = qemu_open_old(buf, O_WRONLY);
++    if (ce->fd_out < 0) {
++        error_setg(errp, "failed to open '%s': %s", buf, strerror(errno));
++        return;
++    } else {
++        fprintf(stderr, "OK (%d)\n", ce->fd_out);
++    }
++    snprintf(buf, CE_BUFSZ, "%s.in", ce->ctrl);
++    fprintf(stderr, "%s: opening %s...", pdev->qdev.id, buf);
++    ce->fd_in = qemu_open_old(buf, O_RDONLY);
++    if (ce->fd_in < 0) {
++        error_setg(errp, "failed to open '%s': %s", buf, strerror(errno));
++        return;
++    } else {
++        fprintf(stderr, "OK (%d)\n", ce->fd_in);
++    }
++
++    ce_init_parser(s, ce, false);
++
++    if (qemu_chr_fe_get_driver(&ce->chr)) {
++        struct ce_parser_state *sa = &ce->pstate[1];
++        ce_init_parser(sa, ce, true);
++        fprintf(stderr, "init async\n");
++        qemu_chr_fe_set_handlers(&ce->chr, ce_can_read, ce_read, NULL, NULL, sa, NULL, true);
++    }
++
++    ce->initialized = false;
++    ce_out(s, "{ \"get-config\" : \"%s\" }\n", pdev->qdev.id);
++    if (ce_get_reply(s) == (uint64_t)-1) {
++        error_setg(errp, "%s: initialization failed\n", pdev->qdev.id);
++        return;
++    }
++    ce->initialized = true;
++}
++
++static void pci_ce_uninit(PCIDevice *pdev)
++{
++}
++
++static Property ce_properties[] = {
++    DEFINE_PROP_STRING("ctrl", CEState, ctrl),
++    DEFINE_PROP_CHR("async", CEState, chr),
++    DEFINE_PROP_END_OF_LIST(),
++};
++
++static void ce_class_init(ObjectClass *class, void *data)
++{
++    DeviceClass *dc = DEVICE_CLASS(class);
++    PCIDeviceClass *k = PCI_DEVICE_CLASS(class);
++
++    k->realize = pci_ce_realize;
++    k->exit = pci_ce_uninit;
++    k->vendor_id = PCI_VENDOR_ID_QEMU;
++    k->device_id = PCI_CE_DEVICE_ID;
++    k->revision = 0x00;
++    k->class_id = PCI_CLASS_OTHERS;
++    device_class_set_props(dc, ce_properties);
++    set_bit(DEVICE_CATEGORY_MISC, dc->categories);
++}
++
++static void pci_ce_register_types(void)
++{
++    static InterfaceInfo interfaces[] = {
++        { INTERFACE_CONVENTIONAL_PCI_DEVICE },
++        { },
++    };
++
++    static const TypeInfo ce_info = {
++        .name          = "ce",
++        .parent        = TYPE_PCI_DEVICE,
++        .instance_size = sizeof(CEState),
++        .class_init    = ce_class_init,
++        .interfaces = interfaces,
++    };
++
++    type_register_static(&ce_info);
++}
++type_init(pci_ce_register_types);
++
++/* vim: set tabstop=8 softtabstop=0 expandtab shiftwitdh=4 smarttab */
+diff --git a/hw/misc/meson.build b/hw/misc/meson.build
+index d02d96e403..58b503010f 100644
+--- a/hw/misc/meson.build
++++ b/hw/misc/meson.build
+@@ -1,5 +1,6 @@
+ system_ss.add(when: 'CONFIG_APPLESMC', if_true: files('applesmc.c'))
+ system_ss.add(when: 'CONFIG_EDU', if_true: files('edu.c'))
++system_ss.add(when: 'CONFIG_CE', if_true: files('ce.c'))
+ system_ss.add(when: 'CONFIG_FW_CFG_DMA', if_true: files('vmcoreinfo.c'))
+ system_ss.add(when: 'CONFIG_ISA_DEBUG', if_true: files('debugexit.c'))
+ system_ss.add(when: 'CONFIG_ISA_TESTDEV', if_true: files('pc-testdev.c'))
+-- 
+2.45.2
+
