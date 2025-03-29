@@ -1,0 +1,239 @@
+#!/bin/bash
+# Script per avviare i programmi 'bare' nella macchina QEMU.
+#
+# Lo script si aspetta di trovare una sottodirectory 'boot' nella directory con
+# all'interno il o i moduli da caricare. I moduli verranno caricati in ordine
+# alfabetico. Per convenzione i nomi dei moduli iniziano con un numero e un
+# trattino. Il nome del modulo creato da compile inizia con '0-', in modo che
+# 'boot' lo carichi per primo.
+#
+# Lo script accetta le seguenti opzioni
+#
+# -g	avvia in modalità debug. La macchina QEMU si fermerà in attesa del
+#	collegamento dello script debug
+#
+# -n	non collegare l'hard disk emulato
+#
+# -c	non aprire una nuova finestra per il monitor e usa direttamente
+#	il terminale corrente. Nota: questo comporta che il log non 
+#	essere inviato sul terminale e viene invece scritto nel file
+#	'serial.txt'.
+#
+# -C	disabilita i colori nel log (può essere utile provare a farlo se per qualche
+#	motivo il log non viene mostrato per intero)
+#
+# -r	disabilita la traduzione degli idirizzi in simboli/numero di linea nel log
+#	(può essere utile provare a farlo se per qualche motivo il log non viene
+#	mostrato per intero)
+#
+# -k	abilita l'emulazione hardware della CPU.
+#
+#
+# Nota: l'opzione -k velocizza molto l'emulazione, ma per poter funzionare
+# si devono verificare tutte le seguenti condizioni:
+#
+# 1. Non stiamo usando un Mac M1/2/...
+# 2. Non stiamo usando Linux su VM o WSL, oppure la VM/WSL
+#    permette la virtualizzazione annidata (nested virtualization)
+# 3. Abbiamo privilegio sufficiente (root o gruppo kvm, a seconda
+#    delle distribuzioni Linux)
+
+# Includiamo il file di configurazione di libce. Il file contiene la definizione
+# delle seguenti variabili:
+#
+# - CE_BIN:		percorso degli eseguibili di libce
+# - CE_HDPATH:		percorso del file che emula l'hard disk della macchina QEMU
+# - CE_QEMU_AUDIO: 	parametri per l'emulazione dell'audio in QEMU
+# - CE_QEMU_DISPLAY:	parametri per l'emulazione del display
+# - CE_QEMU_BOOT:	percorso del boot loader di libce
+source @CE_ETC@/libce.conf
+
+# Includiamo eventuali altri file di configurazione nella directory conf.
+# Alcuni esercizi del nucleo, per esempio, usano questi file per definire le
+# variabili QEMU_FIFOS e QEMU_PRE_CMD, che avviano l'emulazione di periferiche
+# specifiche per l'esercizio.  Questi file possono anche ridefinire variabili
+# già definite in libce.conf per adatterle ai casi specifici.
+shopt -s nullglob
+for f in conf/*.sh; do
+	[ -r "$f" ] && source "$f"
+done
+shopt -u nullglob
+
+# Cerchiamo l'emulatore QEMU. Se è definita la variabile di ambiente QEMU,
+# proviamo ad usare quella, altrimenti vediamo se l'eseguibile di qemu si trova
+# nella directory degli eseguibili di libce. Se anche questo fallisce, proviamo
+# con il QEMU di sistema (questo comporta che alcune cose non funzioneranno, in
+# particolare gli esercizi sull'I/O e il comando 'apic' del debugger).
+[ -n "$QEMU" ] && {
+	[ -x "$QEMU" ] || {
+		echo "'$QEMU' non esistente o non eseguibile" >&2
+		exit 1
+	}
+}
+[ -z "$QEMU" ] && QEMU=${CE_BIN}/qemu-system-x86_64
+[ -x "$QEMU" ] || QEMU=$(which qemu-system-x86_64)
+[ -x "$QEMU" ] || { echo "qemu non trovato" >&2; exit 1; }
+
+
+# Creiamo le pipe che collegano il QEMU di CE con gli emulatori di periferiche
+# (usati negli esercizi di I/O)
+if [ -n "$QEMU_FIFOS" ]; then
+	if [ "$CEREPORT" = 1 ]; then
+		echo "[boot] ==> Creo: $QEMU_FIFOS"
+	fi
+	for f in $QEMU_FIFOS; do
+		rm -f $f.in $f.out
+		mkfifo $f.in $f.out
+	done
+fi
+
+##################################################################################
+# costruiamo il comando per avviare QEMU. Partiamo con dei default e lo 
+# aggistiamo in base alle opzioni ricevute.
+##################################################################################
+
+# per default la porta seriale, su cui sono inviati i messaggi di log, è emulata
+# dallo standard output di QEMU
+serial=stdio
+# opzioni di default per l'accesso all'hard disk emulato
+drive="-drive file='$CE_HDPATH',index=0,media=disk,cache=writeback,format=raw"
+# opzioni di default per l'emulazione del display
+display="-display $CE_QEMU_DISPLAY"
+
+# Comando base per l'avvio di qemu:
+#
+# - QEMU_PRE_CMD:	processi da lanciare prima/in parallelo con QEMU
+#			(usati nell'emulazione dell'I/O)
+# - QEMU		l'eseguibile di QEMU
+# - cpu qemu64,+la57	emula una CPU Intel/AMD a 64 bit, con la possibilità
+#			di usare TRIE di 5 livelli (la57)
+# - audiodev ...	parametri per l'emulazione dell'audio
+# - machine pcspk...	unico dispositivo audio emulato: lo speaker del PC
+# - no-reboot		esegui lo shutdown ogni volta che viene richiesto un reboot
+# - net none		non emulare dispositivi di rete
+# - m ...		quantità di RAM in megabyte (quanto dice MEM o 16 se MEM
+#			non è definita)
+# - QEMU_EXTRA_OPTIONS	eventuali altre opzioni
+cmd="
+	$QEMU_PRE_CMD
+	'$QEMU'
+	-cpu qemu64,+la57
+	-audiodev $CE_QEMU_AUDIO,id=spk
+	-machine pcspk-audiodev=spk
+	-no-reboot
+	-net none
+	-m ${MEM:-16}
+	$QEMU_EXTRA_OPTIONS
+"
+
+# se esiste la directory debug, aggiungiamo le opzioni per il collegamento con
+# il debugger. Quest non implica che la macchina si fermerà in attesa del
+# debugger: per questo è necessario passare l'ozione '-g'.
+[ -d debug ] && cmd+="
+	-chardev socket,path=debug/.gdb-socket,server=on,wait=off,id=gdb0
+	-gdb chardev:gdb0
+"
+
+# processiamo le opzioni
+for opt
+do
+	case $opt in
+	-g)
+		# se è richiesto il collegamento con il debugger, la directory 'debug'
+		# esistere
+		[ -d debug ] || { echo "ATTENZIONE: directory 'debug' non trovata" >&2; exit 1; }
+		# passiamo l'ozione '-s' al boot loader di libce, tramite il boot loader di QEMU
+		cmd+=" -append -s" 
+		;;
+	-n)
+		# hard disk non richiest: resettiamo la variabile drive
+		drive=
+		;;
+	-C)
+		# per disattivare la colorazione del log settiamo la variabile
+		# di ambiente CENOCOLOR
+		CENOCOLOR=1
+		;;
+	-r)
+		# per disattivare la risoluzione degli indirizzi settiamo la
+		# variabile CERAW
+		CERAW=1
+		;;
+	-c)
+		# display su terminale: redirigiamo la seriale (e quindi il
+		# log) sul file 'serial.txt'.
+		serial=file:serial.txt
+		# disattiviamo la colorazione del log, che non ha senso su un file
+		CENOCOLOR=1
+		# disattiviamo anche la risoluzione dei simboli, per evitare problemi
+		# di buffering nella scrittura su file
+		CERAW=1
+		# sovrascriviamo 'display' in modo da usare il terminale
+		display="-display curses"
+		;;
+	-k)
+		# passiamo l'ulteriore opzione che abilita KVM.
+		cmd+=" -enable-kvm"
+		;;
+	*)
+		echo "opzione sconosciuta: '$opt'" >&2
+		exit 1
+		;;
+	esac
+done
+# Se è definita la variabile AUTOCORR (sito dell'autocorrezione), disabilitiamo
+# completamente il display con l'ozione -nographic e disabilitiamo i colori nel
+# log.  Altrimenti, passiamo l'opzione per la redirezione della seriale.
+if [ -n "$AUTOCORR" ]; then
+	CENOCOLOR=1
+	display=
+	cmd+=" -nographic"
+else
+	cmd+=" -serial $serial"
+fi
+
+# aggiungiamo al comando base le opzioni che sono rimaste in drive e display.
+cmd+=" $drive $display"
+
+# se la variabile display non è stata azzerata, resettiamo il terminale al
+# termine dello script (a volte QEMU lascia il terminale in uno stato
+# scorretto)
+if [ -n "$display" ]; then
+	trap 'stty sane 2>/dev/null' EXIT
+fi
+
+# collezioniamo tutti i moduli contenuti in boot
+shopt -s nullglob
+# set imposta le varibili $1, $2, $3, etc.
+set boot/* >/dev/null 2>&1
+[ -n "$1" ] || {
+	echo "nessun modulo trovato in boot; compile è stato eseguito correttamente?" >&2
+	exit 1
+}
+# $* tra virgolette si espande in $1 $2 $3 etc., usando il primo carattere di
+# IFS come separatore
+IFS=,
+cmd+=" -kernel '$CE_QEMU_BOOT' -initrd $*"
+unset IFS
+shopt -u nullglob
+
+# se CERAW non è definita, facciamo partire lo script decodelog (di libce) in
+# parallelo con QEMU
+if [ -z "$CERAW" ]; then
+	cmd+=" | '$CE_BIN/decodelog'"
+fi
+
+# se CENOCOLOR non è definita, facciamo partire lo script colorlog (di libce)
+# in parallelo con QEMU
+if [ -z "$CENOCOLOR" ]; then
+	cmd+=" | '$CE_BIN/colorlog'"
+fi
+
+# se è definita la variabile di ambiente CEREPORT, mostriamo sul video il
+# comando che stiamo per eseguire
+if [ "$CEREPORT" = 1 ]; then
+	echo "[boot] ==> Eseguo: $cmd"
+fi
+# Infine eseguiamo il comando
+# (usiamo 'eval' per interpretare correttamente eventuali pipe)
+eval $cmd

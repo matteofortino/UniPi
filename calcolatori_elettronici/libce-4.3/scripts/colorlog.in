@@ -1,0 +1,50 @@
+#!/usr/bin/awk -f
+# Questo script colora i messaggi di ouput in base alla severità.
+#
+# Lo script viene invocato per default da boot. Si può evitare di invocarlo
+# passando a boot l'opzione '-C' o settando la variabile di ambiente CENOCOLOR
+# a 1.
+# 
+# Nota: Un altro caso in cui boot non invoca questo script è quando si usa
+# l'opzione '-c' per usare il terminale stesso come monitor della VM, perché in
+# quel caso l'output del log non viene mostrato sul terminale (già occupato) e
+# viene invece rediretto su un file.
+
+
+BEGIN {
+	# colori di foreground
+	fg_black   = "\033[30m"
+	fg_red     = "\033[31m"
+	fg_green   = "\033[32m"
+	fg_yellow  = "\033[33m"
+	fg_blue    = "\033[34m"
+	fg_magenta = "\033[35m"
+	fg_cyan    = "\033[36m"
+	fg_white   = "\033[37m"
+
+	# colori di background
+	bg_black   = "\033[40m"
+	bg_red     = "\033[41m"
+	bg_green   = "\033[42m"
+	bg_yellow  = "\033[43m"
+	bg_blue    = "\033[44m"
+	bg_magenta = "\033[45m"
+	bg_cyan    = "\033[46m"
+	bg_white   = "\033[47m"
+
+	# ritorna ai colori di default
+	reset      = "\033[0m"
+}
+
+# awk esegue i seguenti comandi per ogni linea dello standard input (che in
+# questo caso è l'output di QEMU, eventualmente passato anche attraverso
+# decodelog). awk scompone poi ogni riga in campi usando gli spazi come
+# separatori. Ci si riferisce ai campi con $1, $2, etc., mentre l'intera linea
+# può essere riferita con $0. La parte tra graffe è eseguita solo se il test
+# che la precede ha successo. Per concatenare più stringhe è sufficiente
+# scriverle una dopo l'altra.
+$1=="INF" { print fg_white $0 reset }
+$1=="WRN" { print fg_red   $0 reset }
+$1=="DBG" { print bg_white fg_black  $0 reset }
+$1=="ERR" { print bg_red fg_white $0 reset }
+$1=="USR" { print fg_green $0 reset }

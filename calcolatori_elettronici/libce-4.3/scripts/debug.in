@@ -1,0 +1,78 @@
+#!/bin/bash
+# Script che avvia il debugger e lo connette alla macchina QEMU
+#
+# Lo script si aspetta di trovare una sottodirectory 'debug' nella directory corrente.
+# La directory deve contenere il socket '.gdb-socket' per la connessione con QEMU
+# (il socket è creato da 'boot'), e i moduli caricati da QEMU, in versione debug.
+#
+# Lo script carica in ogni caso le estensioni di libce, più eventuali estensioni
+# che trova in conf/*.py.
+#
+# Lo script assume che 'boot' sia stato avviato con l'ozione '-g'. In questo caso,
+# il boot loader di libce ha ricevuto l'ozione '-s' e sta ciclando sulla variabile
+# 'wait_for_gdb', in attesa di trovarla settata a zero. Dopo la connessione, lo
+# script setta la variabile a zero, imposta un primo breakpoint e poi permette
+# a QEMU di proseguire. Il breapoint è 'main' per default, ma può essere cambiato
+# impostando la variabile di ambiente CE_GDBBREAK.
+
+
+# Carichiamo il file di configurazione di libce.
+# Il file definisce le seguenti variabili:
+#
+# - CE_QEMU_BOOT_DEBUG	versione di debug del boot loader di libce
+# - CE_LIB64		directory che contiene libce-debug.py (estensioni per gdb)
+# - CE_GDB		nome del debugger da utilizzare
+source @CE_ETC@/libce.conf
+
+# controlliamo che esista il socket per la connessione
+if ! [ -e debug/.gdb-socket ]; then
+	echo "connessione non trovata: directory errata, oppure 'boot' lanciato senza '-g'" >&2
+	exit 1
+fi
+
+# creiamo uno script di inizializzazione per gdb
+GDBINIT=$(mktemp)
+# eliminiamo lo script di inizializzazione quando usciamo dal debugger
+trap "rm '$GDBINIT'" exit
+# nome del modulo principale (assumiamo la convenzione usata da 'compile')
+EXE=(debug/0-*)
+{
+	# impostiamo varie opzioni di gdb:
+	# 
+	# print static off	non stampare le variabili statiche
+	# print pretty on	migliora la stampa di array e strutture
+	# print array on	stampa il contenuto degli array
+	# set arch i386:x86_64	architettura del target (potrebbe essere diversa
+	#			da quella della macchina ospite, per esempio se
+	#			stiamo usando un Mac M1/2/...)
+	# file $EXE		programma principale
+	# add-symbol-file ..	aggiungi anche i simboli del boot loader di libce
+	# target ...		istruzioni per collegarsi a QEMU (tramite il socket)
+	cat <<-EOF
+		set print static off
+		set print pretty on
+		set print array on
+		set pagination off
+		set arch i386:x86-64
+		file $EXE
+		add-symbol-file $CE_QEMU_BOOT_DEBUG
+		target remote debug/.gdb-socket
+	EOF
+	# aggiungiamo anche i simboli di debug di eventuali altri moduli
+	ls debug/[1-9]-* 2>/dev/null | sed 's/^/add-symbol-file /'
+	# carichiamo eventuali altri file di configurazione
+	ls conf/*.gdb    2>/dev/null | sed 's/^/source /'
+	# carichiamo le estensioni di gdb definite in libce
+	echo "source $CE_LIB64/libce-debug.py"
+	# carichiamo eventuali altre estensioni presenti in conf
+	ls conf/*.py     2>/dev/null | sed 's/^/source /'
+	# sblocchiamo il boot loader e facciamo avanzare l'esecuzione fino
+	# al breakpoint richiesto
+	cat <<-EOF
+		set {int}&wait_for_gdb=0
+		break *${CE_GDBBREAK:-main}
+		continue
+	EOF
+} > "$GDBINIT"
+# avviamo il debugger passandogli lo script appena creato
+$CE_GDB -x "$GDBINIT"

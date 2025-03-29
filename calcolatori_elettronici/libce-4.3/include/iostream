@@ -1,0 +1,60 @@
+/// @cond INTERNAL
+#include "libce.h"
+extern int pause_called;
+static void pause_caller() __attribute__((destructor));
+static void pause_caller()
+{
+	if (!pause_called++)
+		pause();
+}
+
+namespace std {
+	class ostream;
+
+	inline ostream& operator << (ostream& o, double d) {
+		printf("%d", static_cast<int>(d));
+		return o;
+	}
+
+	inline ostream& operator << (ostream& o, long l) {
+		printf("%ld", l);
+		return o;
+	}
+
+	inline ostream& operator << (ostream& o, unsigned long l) {
+		printf("%lu", l);
+		return o;
+	}
+
+	inline ostream& operator << (ostream& o, int i) {
+		printf("%d", i);
+		return o;
+	}
+
+	inline ostream& operator << (ostream& o, unsigned int i) {
+		printf("%u", i);
+		return o;
+	}
+
+	inline ostream& operator << (ostream& o, char c) {
+		printf("%c", c);
+		return o;
+	}
+
+	inline ostream& operator << (ostream& o, const char *c) {
+		printf("%s", c);
+		return o;
+	}
+
+	extern ostream cout;
+
+	class newline;
+
+	inline ostream& operator << (ostream& o, newline&) {
+		printf("\n");
+		return o;
+	}
+
+	extern newline endl;
+}
+/// @endcond
