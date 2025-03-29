@@ -1,0 +1,11 @@
+*
+*/
+**/*
+
+!.devcontainer/
+!.devcontainer/**
+
+!.gitignore
+
+!README.md
+!LICENSE
