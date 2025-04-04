@@ -1,0 +1,34 @@
+Aggiungere al nucleo la funzionalità di msgbox.
+
+1) Una msgbox è una coda FIFO di messaggi con molti scrittori e molti lettori.
+
+    La primitiva `natl msgbox_init()` crea una nuova msgbox e ritorna il suo id.
+
+2) Un processo può estrarre un messaggio dalla msgbox con la primitiva
+
+    natl msgbox_recv(natl box);
+
+    `natl msgbox_recv(natl box)` ritorna l'ultimo messaggio presente nella coda e lo estrae.
+    Se non c'è nessun messaggio nella msgbox il processo chiamante viene aggiungo alla coda `waiting` e sospeso.
+    Il processo verrà aggiunto alla coda pronti non appena un messaggio sarà inserito nella msgbox
+
+3) Un processo può inviare un messaggio in una msgbox con la primitiva
+
+    void msgbox_send(natl box, natl msg);
+
+    Se la coda `waiting` non è vuota viene estratto il processo a priorità più alta e viene aggiunto alla coda pronti
+
+
+Utilizzare le seguenti strutture dati
+
+```
+struct des_msg {
+    natl content;
+    des_msg* next;
+};
+
+struct des_msgbox {
+    des_proc* waiting;
+    des_msg* messages;
+};
+```
