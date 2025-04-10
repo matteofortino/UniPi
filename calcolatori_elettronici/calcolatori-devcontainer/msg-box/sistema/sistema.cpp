@@ -1834,21 +1834,8 @@ natl alloca_msgbox() {
   return nuova_box;
 }
 
-des_msg *rimuovi_messaggio(natq box_id) {
-  des_msgbox *box = &MSGBOX[box_id];
-  des_msg *head = box->messages;
-  des_msg *msg;
-
-  if (!head)
-    return nullptr;
-
-  msg = head;
-  head = head->next;
-
-  return msg;
-}
 bool valid_box_id(natl box_id) {
-  return (box_id >= 0 && box_id <= msgbox_allocate);
+  return (box_id >= 0 && box_id < msgbox_allocate);
 }
 
 extern "C" void c_msgbox_init() {
@@ -1863,40 +1850,42 @@ extern "C" void c_msgbox_init() {
 }
 
 extern "C" void c_msgbox_recv(natl box_id) {
-  flog(LOG_DEBUG, "c_msgbox_recv  box_id=%d", box_id);
-
   if (!valid_box_id(box_id)) {
     flog(LOG_ERR, "la msgbox con id:%d non e' stata allocata", box_id);
     c_abort_p();
     return;
   }
 
+  flog(LOG_DEBUG, "c_msgbox_recv  box_id=%d", box_id);
+
   des_msgbox *box = &MSGBOX[box_id];
-  des_msg *msg = rimuovi_messaggio(box_id);
-  if (msg) {
+
+  if (box->messages) {
+		des_msg* msg = box->messages;
+		box->messages = box->messages->next;
     esecuzione->contesto[I_RAX] = msg->content;
-    inserimento_lista(pronti, esecuzione);
-    schedulatore();
-  }
-  inserimento_lista(box->waiting, esecuzione);
-  schedulatore();
+		delete msg;
+	} else {
+		inserimento_lista(box->waiting, esecuzione);
+		schedulatore();
+	}
 }
 
 extern "C" void c_msgbox_send(natl box_id, natl msg_content) {
-  flog(LOG_DEBUG, "c_msgbox_send  box_id=%d msg_content=%d", box_id,
-       msg_content);
-
   if (!valid_box_id(box_id)) {
     flog(LOG_ERR, "la msgbox con id:%d non e' stata allocata", box_id);
     c_abort_p();
     return;
   }
+
+  flog(LOG_DEBUG, "c_msgbox_send  box_id=%d msg_content=%d", box_id,
+       msg_content);
 
   des_msgbox *box = &MSGBOX[box_id];
 
   des_msg *msg = new des_msg;
-  msg->next = nullptr;
   msg->content = msg_content;
+  msg->next = nullptr;
 
   if (!box->messages) {
     box->messages = msg;
@@ -1907,13 +1896,18 @@ extern "C" void c_msgbox_send(natl box_id, natl msg_content) {
     p->next = msg;
   }
 
-  inspronti();
+	inspronti();
   if (box->waiting) {
+		msg = box->messages;
+		box->messages = box->messages->next;
+
     des_proc *p = rimozione_lista(box->waiting);
     p->contesto[I_RAX] = msg->content;
     inserimento_lista(pronti, p);
+
+		delete msg;
   } else {
     inserimento_lista(pronti, esecuzione);
   }
-  schedulatore();
+	schedulatore();
 }
