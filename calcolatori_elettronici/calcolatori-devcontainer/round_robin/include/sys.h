@@ -119,8 +119,6 @@ extern "C" meminfo getmeminfo();
  */
 extern "C" void do_log(log_sev sev, const char* buf, natl quanti);
 /// @}
+extern "C" void abilita_rr();
+extern "C" void disabilita_rr();
 
-
-extern "C" natl msgbox_init();
-extern "C" natl msgbox_recv(natl box);
-extern "C" void msgbox_send(natl box, natl msg);
