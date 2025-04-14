@@ -1,0 +1,16 @@
+{
+    "terminal.integrated.profiles.linux": {
+        "bash": {
+            "path": "bash",
+            "icon": "terminal-bash"
+        },
+        "pwsh": {
+            "path": "pwsh",
+            "args": ["-wd", "/home/raff/assembler/linux"],
+            "icon": "terminal-powershell"
+        }
+    },
+    "terminal.integrated.defaultProfile.linux": "pwsh",
+    "terminal.integrated.defaultLocation": "view",
+    "workbench.colorTheme": "Default Dark+"
+}
