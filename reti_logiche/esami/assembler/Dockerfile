@@ -13,7 +13,9 @@ RUN dpkg --add-architecture i386 && \
     unzip \
     apt-transport-https \
     software-properties-common \
-    ca-certificates
+    ca-certificates \
+		file \
+		gcc 
 
 # Install PowerShell
 RUN curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.gpg && \
