@@ -1,9 +1,0 @@
-version: "3.8"
-
-services:
-  asm-dev:
-    build: .
-    volumes:
-      - ./linux:/code
-    stdin_open: true
-    tty: true
