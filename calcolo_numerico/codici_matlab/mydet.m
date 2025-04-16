@@ -1,4 +1,4 @@
-function d = my_det(A)
+function d = mydet(A)
 n = size(A, 1);
 if n == 1
     d = A;
