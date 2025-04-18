@@ -15,13 +15,7 @@ body {
   width: 250px;
   background-color: white;
   border-radius: 0 16px 16px 0;
-}
-.menu-icon {
-  width: 100%;
-  height: 30px;
-  color: lightskyblue;
-  display: flex;
-  margin-left: 95px;
+  padding-top: 30px;
 }
 ul > li {
   list-style-type: none;
@@ -34,10 +28,6 @@ ul {
 ul > li:hover {
   text-decoration: underline;
   text-decoration-color: lightskyblue;
-}
-ul > li:last-child:hover {
-  text-decoration: underline;
-  text-decoration-color: #f54c4c;
 }
 ul > li > a {
   text-decoration: none;
@@ -57,25 +47,56 @@ ul > li > a {
   position: absolute;
   bottom: 40px;
 }
+.log-out-option:hover {
+  text-decoration: underline;
+  text-decoration-color: #f54c4c;
+}
 .list-icon {
   color: lightskyblue;
   height: 20px;
   width: 20px;
   margin-right: 10px;
 }
+
 .red {
   color: #f54c4c;
 }
 
-.slide {
-  animation: slide 0.2 linear;
-}
-
-@keyframes slide {
-  from {
-    width: 250px;
+@media screen and (max-width: 768px) {
+  .nav-bar {
+    position: absolute;
+    bottom: 0;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: white;
+    border-radius: 16px 16px 0 0;
   }
-  to {
-    width: 50px;
+  .log-out-option {
+    position: inherit;
+    top: 0;
+    bottom: 0;
+  }
+  ul {
+    width: inherit;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 0;
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+  ul > li {
+    margin-top: 0;
+  }
+  ul > li:last-child {
+    display: none;
+  }
+  .list-text {
+    display: none;
   }
 }
