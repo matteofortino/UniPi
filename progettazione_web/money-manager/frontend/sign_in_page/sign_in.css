@@ -1,0 +1,137 @@
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: white;
+}
+
+.form {
+  display: grid;
+  place-content: center;
+  gap: 20px;
+  width: 100%;
+  height: 100%;
+  max-width: 500px;
+  max-height: 700px;
+  background-color: white;
+  color: lightskyblue;
+  border-radius: 16px;
+}
+
+.name-surname-container {
+  width: 100%;
+  display: grid;
+  place-items: center;
+  grid-template-columns: auto auto auto auto;
+  gap: 10px;
+  justify-content: space-around;
+}
+
+.logo-image {
+  width: 100px;
+  height: 100px;
+  align-items: center;
+  position: absolute;
+  top: 50px;
+}
+label {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+input {
+  height: 30px;
+  border-radius: 10px;
+  padding: 10px;
+  border: 1px solid lightskyblue;
+  font-style: italic;
+  font-size: 14px;
+  text-align: center;
+}
+
+div > input {
+  height: 20px;
+}
+
+input:user-invalid {
+  border: 1px solid red;
+}
+
+button {
+  display: grid;
+  place-content: center;
+  height: 30px;
+  background-color: white;
+  border: 1px solid lightskyblue;
+  border-radius: 10px;
+  padding: 10px;
+}
+button:hover {
+  background-color: lightskyblue;
+  color: white;
+}
+button:disabled {
+  background-color: lightgray;
+}
+
+.side-text {
+  color: lightskyblue;
+  font-weight: bolder;
+  font-size: 64px;
+  width: 100%;
+}
+.top {
+  transform: rotate(-90deg);
+}
+
+.bottom {
+  transform: rotate(90deg);
+}
+
+@media screen and (max-width: 768px) {
+  .bottom,
+  .top {
+    position: absolute;
+    font-size: 24px;
+    width: 100%;
+  }
+  .top {
+    left: -150px;
+  }
+  .bottom {
+    right: -150px;
+  }
+  .logo-image {
+    height: 65px;
+    width: 65px;
+    top: 10px;
+  }
+  .form {
+    max-width: 350px;
+    display: grid;
+    place-content: center;
+    place-items: center;
+  }
+  input {
+    width: 100%;
+    max-width: 320px;
+    height: 20px;
+    text-align: center;
+  }
+  button {
+    width: 100%;
+  }
+
+  .name-surname-container {
+    display: grid;
+    place-items: center;
+    grid-template-columns: auto;
+  }
+}
+
+@media screen and (max-width: 1236px) {
+  .top,
+  .bottom {
+    font-size: 32px;
+  }
+}

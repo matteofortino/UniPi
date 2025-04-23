@@ -62,7 +62,7 @@ Highcharts.chart("grafico-entrate", {
     type: "line",
   },
   title: {
-    text: mobile ? "Entrare" : "Entrate durante la settimana",
+    text: mobile ? "Entrate" : "Entrate durante la settimana",
     style: {
       color: "#2caffe",
     },

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="../../global.css" />
+    <link rel="stylesheet" href="sign_in.css" />
+    <link rel="icon" href="../../images/logo-icon.svg" type="image/svg" />
+    <title>Sign In</title>
+  </head>
+  <body>
+    <img src="../../images/logo-icon.svg" alt="logo" class="logo-image" />
+    <p class="side-text top">MONEY MANAGER</p>
+    <form action="" class="form">
+      <div class="name-surname-container">
+        <label for="name">Name</label>
+        <input type="text" name="name" id="name" placeholder="John" required />
+
+        <label for="surname">Surname</label>
+        <input
+          type="text"
+          name="surname"
+          id="surname"
+          placeholder="Doe"
+          required
+        />
+      </div>
+      <label for="email">Email</label>
+      <input
+        type="email"
+        name="email"
+        id="email"
+        placeholder="johndoe@gmail.com"
+        required
+      />
+
+      <label for="number">Number</label>
+      <input
+        type="number"
+        name="number"
+        id="number"
+        placeholder="+39 *** *** ****"
+        required
+      />
+
+      <label for="password">Password</label>
+      <input
+        type="password"
+        name="password"
+        id="password"
+        placeholder="*************"
+        min="3"
+        max="16"
+        required
+      />
+      <button type="submit">Invia</button>
+    </form>
+    <p class="side-text bottom">MONEY MANGER</p>
+  </body>
+</html>
