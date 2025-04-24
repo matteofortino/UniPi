@@ -48,14 +48,16 @@ input:user-invalid {
 button {
   display: grid;
   place-content: center;
+  color: white;
   height: 30px;
-  background-color: white;
+  background-color: lightskyblue;
   border: 1px solid lightskyblue;
   border-radius: 10px;
   padding: 10px;
 }
+
 button:hover {
-  background-color: lightskyblue;
+  background-color: rgb(91, 163, 207);
   color: white;
 }
 button:disabled {
