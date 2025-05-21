@@ -71,8 +71,8 @@ always if(reset_ == 0) #1 begin
 end
 always @(posedge clock) if(reset_ == 1) #3 begin
   casex(b0)
-    0: SOC <= 0;
-    1: SOC <= 1;
+    1'b0: SOC <= 0;
+    1'b1: SOC <= 1;
   endcase
 end
 
@@ -81,8 +81,8 @@ always if(reset_ == 0) #1 begin
 end
 always @(posedge clock) if(reset_ == 1) #3 begin
   casex(b1)
-    0: DAV_ <= 1;
-    1: DAV_ <= 0;
+    1'b0: DAV_ <= 1;
+    1'b1: DAV_ <= 0;
   endcase
 end
 
@@ -96,8 +96,8 @@ always if(reset_ == 0) #1 begin
 end
 always @(posedge clock) if(reset_ == 1) #3 begin
   casex(b2)
-    0: MIN <= MIN;
-    1: MIN <= minimo;
+    1'b0: MIN <= MIN;
+    1'b1: MIN <= minimo;
   endcase
 end
 endmodule
