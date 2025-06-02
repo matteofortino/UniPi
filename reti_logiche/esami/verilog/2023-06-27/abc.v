@@ -44,7 +44,6 @@ always @(posedge clock) if(reset_ == 1) begin
     end 
     S1: begin
       RFD <= 0; 
-      OUT <= 0;
       STAR <= ({dav_x, dav_y} == 2'b11) ? S2 : S1;
     end
     S2: begin
