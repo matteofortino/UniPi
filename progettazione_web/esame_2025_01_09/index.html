@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Prenotazione Cinema</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background: #f0f0f0;
+        margin: 0;
+        padding: 0;
+      }
+      .centered {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+      }
+      #prenotazione-form {
+        background: #b3e0ff;
+        padding: 2em 2.5em;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px #0002;
+        display: flex;
+        flex-direction: column;
+        gap: 1em;
+        min-width: 300px;
+      }
+      #prenotazione-form input,
+      #prenotazione-form select {
+        padding: 0.5em;
+        border: 1px solid #aaa;
+        border-radius: 5px;
+        font-size: 1em;
+        transition: background 0.2s;
+      }
+      #prenotazione-form input.invalid {
+        background: #ffb3b3;
+      }
+      #prenotazione-form label {
+        font-weight: bold;
+      }
+      #scegli-btn {
+        background: #0077cc;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        padding: 0.7em 1.5em;
+        font-size: 1em;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+      #scegli-btn:disabled {
+        background: #aaa;
+        cursor: not-allowed;
+      }
+      #sala-container {
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        gap: 2em;
+        margin-top: 2em;
+      }
+      #sala {
+        display: grid;
+        grid-template-columns: repeat(8, 40px);
+        grid-gap: 8px;
+        background: #fff;
+        padding: 1em;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px #0002;
+      }
+      .posto {
+        width: 40px;
+        height: 40px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 1em;
+        cursor: pointer;
+        border: 2px solid #3332;
+        transition: background 0.2s, color 0.2s;
+        user-select: none;
+      }
+      .posto.disponibile {
+        background: #7fff7f;
+        color: #222;
+      }
+      .posto.occupato {
+        background: #ff4d4d;
+        color: #fff;
+        cursor: not-allowed;
+      }
+      .posto.selezionato {
+        background: #3399ff;
+        color: #fff;
+      }
+      #prenotazioni-lista {
+        background: #fff8b3;
+        padding: 1em 2em;
+        border-radius: 10px;
+        min-width: 250px;
+        box-shadow: 0 2px 8px #0002;
+      }
+      #prenotazioni-lista h3 {
+        margin-top: 0;
+      }
+      #fine-btn {
+        margin-top: 1.5em;
+        background: #0077cc;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        padding: 0.7em 1.5em;
+        font-size: 1em;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+      @media (max-width: 600px) {
+        #sala {
+          grid-template-columns: repeat(8, 28px);
+        }
+        .posto {
+          width: 28px;
+          height: 28px;
+          font-size: 0.8em;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="centered">
+      <form id="prenotazione-form" autocomplete="off">
+        <label for="nome">Nome:</label>
+        <input type="text" id="nome" name="nome" required />
+        <label for="cognome">Cognome:</label>
+        <input type="text" id="cognome" name="cognome" required />
+        <label for="spettacolo">Spettacolo:</label>
+        <select id="spettacolo" name="spettacolo" required>
+          <option value="15:00">15:00</option>
+          <option value="18:00">18:00</option>
+          <option value="21:00">21:00</option>
+        </select>
+        <button type="submit" id="scegli-btn" disabled>Scegli</button>
+      </form>
+      <div id="sala-container" style="display: none">
+        <div>
+          <div id="sala"></div>
+          <button id="fine-btn">Fine</button>
+        </div>
+        <div id="prenotazioni-lista">
+          <h3>Prenotazioni</h3>
+          <ul id="lista-prenotazioni"></ul>
+        </div>
+      </div>
+    </div>
+    <script>
+      // Configurazione sala: 6 righe x 8 colonne
+      const RIGHE = 6;
+      const COLONNE = 8;
+
+      // Stato delle prenotazioni per spettacolo
+      // { "15:00": [ {nome, cognome, riga, colonna} ], ... }
+      const prenotazioni = {
+        "15:00": [],
+        "18:00": [],
+        "21:00": [],
+      };
+
+      // Stato della sala per spettacolo: array 2D di boolean (true=occupato)
+      const statoSala = {
+        "15:00": Array.from({ length: RIGHE }, () =>
+          Array(COLONNE).fill(false)
+        ),
+        "18:00": Array.from({ length: RIGHE }, () =>
+          Array(COLONNE).fill(false)
+        ),
+        "21:00": Array.from({ length: RIGHE }, () =>
+          Array(COLONNE).fill(false)
+        ),
+      };
+
+      // Elementi DOM
+      const form = document.getElementById("prenotazione-form");
+      const nomeInput = document.getElementById("nome");
+      const cognomeInput = document.getElementById("cognome");
+      const spettacoloSelect = document.getElementById("spettacolo");
+      const scegliBtn = document.getElementById("scegli-btn");
+      const salaContainer = document.getElementById("sala-container");
+      const salaDiv = document.getElementById("sala");
+      const fineBtn = document.getElementById("fine-btn");
+      const listaPrenotazioni = document.getElementById("lista-prenotazioni");
+
+      let utenteCorrente = null;
+      let spettacoloCorrente = null;
+
+      // Validazione nome/cognome
+      function validaNomeCognome(val) {
+        return /^[A-Z][a-zA-Z]{2,9}$/.test(val);
+      }
+
+      function aggiornaValidazione() {
+        let nomeValido = validaNomeCognome(nomeInput.value);
+        let cognomeValido = validaNomeCognome(cognomeInput.value);
+
+        nomeInput.classList.toggle("invalid", !nomeValido);
+        cognomeInput.classList.toggle("invalid", !cognomeValido);
+
+        scegliBtn.disabled = !(nomeValido && cognomeValido);
+      }
+
+      nomeInput.addEventListener("input", aggiornaValidazione);
+      cognomeInput.addEventListener("input", aggiornaValidazione);
+
+      // Mostra la sala e le prenotazioni
+      function mostraSala() {
+        salaDiv.innerHTML = "";
+        const stato = statoSala[spettacoloCorrente];
+
+        for (let r = 0; r < RIGHE; r++) {
+          for (let c = 0; c < COLONNE; c++) {
+            const posto = document.createElement("div");
+            posto.classList.add("posto");
+            posto.textContent = `${r + 1},${c + 1}`;
+            if (stato[r][c]) {
+              posto.classList.add("occupato");
+            } else {
+              posto.classList.add("disponibile");
+              posto.addEventListener("click", () => prenotaPosto(r, c, posto));
+            }
+            salaDiv.appendChild(posto);
+          }
+        }
+      }
+
+      // Aggiorna la lista delle prenotazioni
+      function aggiornaListaPrenotazioni() {
+        listaPrenotazioni.innerHTML = "";
+        prenotazioni[spettacoloCorrente].forEach((p) => {
+          const li = document.createElement("li");
+          li.textContent = `${p.nome} ${p.cognome} (${p.riga + 1},${
+            p.colonna + 1
+          })`;
+          listaPrenotazioni.appendChild(li);
+        });
+      }
+
+      // Prenota un posto
+      function prenotaPosto(r, c, postoDiv) {
+        // Segna come occupato
+        statoSala[spettacoloCorrente][r][c] = true;
+        prenotazioni[spettacoloCorrente].push({
+          nome: utenteCorrente.nome,
+          cognome: utenteCorrente.cognome,
+          riga: r,
+          colonna: c,
+        });
+        mostraSala();
+        aggiornaListaPrenotazioni();
+      }
+
+      // Gestione submit form
+      form.addEventListener("submit", function (e) {
+        e.preventDefault();
+        utenteCorrente = {
+          nome: nomeInput.value,
+          cognome: cognomeInput.value,
+        };
+        spettacoloCorrente = spettacoloSelect.value;
+        form.style.display = "none";
+        salaContainer.style.display = "flex";
+        mostraSala();
+        aggiornaListaPrenotazioni();
+      });
+
+      // Bottone fine
+      fineBtn.addEventListener("click", function () {
+        utenteCorrente = null;
+        spettacoloCorrente = null;
+        form.reset();
+        aggiornaValidazione();
+        salaContainer.style.display = "none";
+        form.style.display = "flex";
+      });
+
+      // Inizializza validazione
+      aggiornaValidazione();
+    </script>
+  </body>
+</html>

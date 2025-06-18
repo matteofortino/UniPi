@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Esame 17/7/2024</title>
+    <style>
+      .form {
+        width: 200px;
+        padding: 15px 10px;
+        background-color: gray;
+        display: grid;
+        grid-template-columns: auto auto;
+      }
+      .form > input {
+        margin-bottom: 15px;
+      }
+      .form > input:invalid {
+        background-color: orange;
+      }
+      button {
+        width: 50px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="form">
+      <label for="rows">Quante righe?</label>
+      <input type="number" name="rows" id="rows" min="1" max="26" required />
+
+      <label for="cols">Quante colonne?</label>
+      <input type="number" name="cols" id="cols" min="1" max="9" required />
+      <button type="button" id="button" disabled>Crea</button>
+    </div>
+
+    <script>
+      const rowsInput = document.getElementById("rows");
+      const colsInput = document.getElementById("cols");
+      const button = document.getElementById("button");
+
+      function inizializza() {
+        rowsInput.addEventListener("input", controlla);
+        colsInput.addEventListener("input", controlla);
+      }
+
+      function controlla() {
+        console.log(rowsInput.validity.valid, colsInput.validity.valid);
+
+        if (rowsInput.validity.valid && colsInput.validity.valid)
+          button.disabled = false;
+        else button.disabled = true;
+      }
+
+      button.addEventListener("click", creaFoglioDiCalcolo);
+      function creaFoglioDiCalcolo() {
+        const table = document.createElement("table");
+        const ROWS = rowsInput.value;
+        const COLS = colsInput.value;
+
+        for (let i = 0; i <= ROWS; i++) {
+          const tr = document.createElement("tr");
+          table.append(tr);
+          if (i == 0) {
+            for (let h = 0; h <= COLS; h++) {
+              const th = document.createElement("th");
+              if (h == 0) th.innerText = "\\";
+              else th.innerText = h;
+              tr.append(th);
+            }
+            continue;
+          }
+          for (let j = 0; j <= COLS; j++) {
+            if (j == 0) {
+              const th = document.createElement("th");
+              th.innerText = String.fromCharCode(i - 1 + "A".charCodeAt(0));
+              tr.append(th);
+            } else {
+              const td = document.createElement("td");
+              tr.append(td);
+              const input = document.createElement("input");
+              input.readOnly = true;
+              input.classList.add("cell");
+              input.addEventListener("click");
+              input.id = i + "|" + j;
+              td.append(input);
+            }
+          }
+        }
+
+        document.querySelector(".form").style.display = "none";
+        document.body.append(table);
+      }
+
+      inizializza();
+    </script>
+  </body>
+</html>
