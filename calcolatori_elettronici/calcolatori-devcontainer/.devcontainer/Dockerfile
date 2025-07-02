@@ -1,5 +1,5 @@
-FROM mcr.microsoft.com/devcontainers/base:noble
-
+# FROM mcr.microsoft.com/devcontainers/base:noble
+FROM --platform=linux/amd64 mcr.microsoft.com/devcontainers/base:noble
 ARG LIBCE_VERSION="4.1"
 ARG QEMU_VERSION="9.2.2-3"
 
