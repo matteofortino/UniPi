@@ -21,6 +21,15 @@
       button {
         width: 50px;
       }
+      .table {
+        background-color: pink;
+      }
+      .readonly {
+        background-color: pink;
+      }
+      .edit {
+        background-color: yellow;
+      }
     </style>
   </head>
   <body>
@@ -38,12 +47,12 @@
       const colsInput = document.getElementById("cols");
       const button = document.getElementById("button");
 
-      function inizializza() {
-        rowsInput.addEventListener("input", controlla);
-        colsInput.addEventListener("input", controlla);
+      function initialize() {
+        rowsInput.addEventListener("input", controlled);
+        colsInput.addEventListener("input", controlled);
       }
 
-      function controlla() {
+      function controlled() {
         console.log(rowsInput.validity.valid, colsInput.validity.valid);
 
         if (rowsInput.validity.valid && colsInput.validity.valid)
@@ -54,6 +63,7 @@
       button.addEventListener("click", creaFoglioDiCalcolo);
       function creaFoglioDiCalcolo() {
         const table = document.createElement("table");
+        table.classList.add("table");
         const ROWS = rowsInput.value;
         const COLS = colsInput.value;
 
@@ -79,8 +89,9 @@
               tr.append(td);
               const input = document.createElement("input");
               input.readOnly = true;
-              input.classList.add("cell");
-              input.addEventListener("click");
+              input.classList.add("cell", "readonly");
+              input.type = "number";
+              input.addEventListener("click", seleziona);
               input.id = i + "|" + j;
               td.append(input);
             }
@@ -91,7 +102,14 @@
         document.body.append(table);
       }
 
-      inizializza();
+      function seleziona(e) {
+        const inputTarget = e.target;
+        inputTarget.classList.ex;
+        inputTarget.classList.replace("readonly", "edit");
+        inputTarget.readOnly = false;
+      }
+
+      initialize();
     </script>
   </body>
 </html>
