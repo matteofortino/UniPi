@@ -16,8 +16,8 @@
  * o livello maggiori dei propri.
  *
  * @param f		corpo del processo
- * @param a		parametro per il corpo del processo 
- * @param prio		priorità del processo 
+ * @param a		parametro per il corpo del processo
+ * @param prio		priorità del processo
  * @param liv		livello del processo (LIV_UTENTE o LIV_SISTEMA)
  *
  * @return 		id del nuovo processo, o 0xFFFFFFFF in caso di errore
@@ -89,7 +89,8 @@ extern "C" void delay(natl n);
  * Questa struttura contiene delle informazioni che sono usate nei testi d'esame
  * per eseguire alcuni controlli.
  */
-struct meminfo {
+struct meminfo
+{
 	/// numero di byte liberi nello heap di sistema
 	natl heap_libero;
 	/// numero di frame liberi in M2
@@ -109,7 +110,7 @@ extern "C" meminfo getmeminfo();
  * @brief Invia un messaggio al log.
  *
  * Questa primitiva è usata dai moduli I/O e utente per inviare i propri
- * messaggi al log di sistema. 
+ * messaggi al log di sistema.
  *
  * @note Il modulo sistema usa direttamente la do_log() definita in libce.
  *
@@ -117,5 +118,7 @@ extern "C" meminfo getmeminfo();
  * @param buf		buffer contenente il messaggio
  * @param quanti	lunghezza del messaggio
  */
-extern "C" void do_log(log_sev sev, const char* buf, natl quanti);
+extern "C" void do_log(log_sev sev, const char *buf, natl quanti);
 /// @}
+
+extern "C" natw getid();

@@ -141,3 +141,8 @@ getiomeminfo:
 	.cfi_endproc
 /// @endcond
 /// @}
+
+.global getid
+getid: 
+	int $TIPO_GETID
+	ret

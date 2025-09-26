@@ -34,7 +34,6 @@
 .set R15, CTX + I_R15 * 8
 .set CR3, CTX + N_REG * 8
 /// @endcond
-
 /// @brief copia lo stato dei registri generali nel des_proc del processo puntato da
 /// @ref esecuzione.
 /// @note Nessun registro viene sporcato.
@@ -230,15 +229,17 @@ init_idt:
 	// tipo 31 riservato
 
 	//primitive comuni (tipi 0x2-)
-	carica_gate	TIPO_A		a_activate_p	LIV_UTENTE
-	carica_gate	TIPO_T		a_terminate_p	LIV_UTENTE
-	carica_gate	TIPO_SI		a_sem_ini	LIV_UTENTE
-	carica_gate	TIPO_W		a_sem_wait	LIV_UTENTE
-	carica_gate	TIPO_S		a_sem_signal	LIV_UTENTE
-	carica_gate	TIPO_D		a_delay		LIV_UTENTE
-	carica_gate	TIPO_AB		a_abort_p	LIV_UTENTE
-	carica_gate	TIPO_L		a_do_log	LIV_UTENTE
-	carica_gate	TIPO_GMI	a_getmeminfo	LIV_UTENTE
+	carica_gate	TIPO_A		   a_activate_p	    LIV_UTENTE
+	carica_gate	TIPO_T		   a_terminate_p	LIV_UTENTE
+	carica_gate	TIPO_SI	       a_sem_ini	LIV_UTENTE
+	carica_gate	TIPO_W		   a_sem_wait	LIV_UTENTE
+	carica_gate	TIPO_S		   a_sem_signal	LIV_UTENTE
+	carica_gate	TIPO_D		   a_delay		LIV_UTENTE
+	carica_gate	TIPO_AB	       a_abort_p	LIV_UTENTE
+	carica_gate	TIPO_L		   a_do_log	    LIV_UTENTE
+	carica_gate	TIPO_GMI       a_getmeminfo	LIV_UTENTE
+
+	carica_gate TIPO_GETID 	   a_getid      LIV_UTENTE
 
 	// primitive per il livello I/O (tipi 0x3-)
 	carica_gate	TIPO_APE	a_activate_pe	LIV_SISTEMA
@@ -1440,3 +1441,14 @@ tss_punt_nucleo:
 	.quad 0
 /// @endcond
 /// @}
+
+.extern c_getid
+.global a_getid
+.text
+a_getid:
+	.cfi_startproc
+	call salva_stato
+	call c_getid
+	call carica_stato
+	iretq
+	.cfi_endproc
