@@ -1,7 +1,7 @@
 .include "files/utility.s"
 .global _main
 
-.text 
+.text
 _main:
     nop
     mov $0, %ecx

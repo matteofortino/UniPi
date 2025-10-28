@@ -52,7 +52,7 @@ stampa:
   jmp fine
 
 non_naturale:
-  lea msg, %ebx 
+  lea msg, %ebx
   call outline
   call newline
 
