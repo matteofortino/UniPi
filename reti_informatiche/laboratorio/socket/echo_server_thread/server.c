@@ -27,7 +27,7 @@ void *handle_client(void *arg) {
         char buffer[MAX_SIZE];
         memset(buffer, 0, sizeof(buffer));
 
-        int bytes = recv(new_sd, buffer, sizeof(buffer), 0);
+        int bytes = recv(new_sd, buffer, sizeof(buffer), MSG_WAITALL);
         if (bytes <= 0) {
             printf("Client disconnected.\n");
             close(new_sd);

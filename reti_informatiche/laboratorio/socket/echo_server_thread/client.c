@@ -51,7 +51,7 @@ int main(int argc, char *argv[]) {
 
         send(sd, message, strlen(message), 0);
 
-        int bytes = recv(sd, buffer, sizeof(buffer), 0);
+        int bytes = recv(sd, buffer, sizeof(buffer), MSG_WAITALL);
         if (bytes <= 0) {
             printf("Server closed the connection.\n");
             break;
