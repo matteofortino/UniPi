@@ -52,7 +52,7 @@ int main(int argc, char *argv[]) {
     new_sd = accept(sd, (struct sockaddr *)&cl_addr, &len);
     if (new_sd < 0) {
       perror("accept");
-      continue; // keep listening even if one accept fails
+      exit(1); // keep listening even if one accept fails
     }
 
     printf("New client connected!\n");
@@ -66,11 +66,12 @@ int main(int argc, char *argv[]) {
     }
     if (pid == 0) {
       // FIGLIO
+      close(sd);
       while (1) {
         char buffer[MAX_SIZE];
         memset(buffer, 0, sizeof(buffer));
 
-        int bytes = recv(new_sd, buffer, sizeof(buffer), MSG_WAITALL);
+        int bytes = recv(new_sd, buffer, sizeof(buffer), 0);
         if (bytes <= 0) {
           printf("Client disconnected.\n");
           close(new_sd);
