@@ -1,11 +1,8 @@
-#include "utility/comandi.c"
-#include "utility/lista_utenti.c"
+#include "all.h"
 
-struct lavagna_info_t {
-  int id;
-  struct card_info_t *colonne[3];
-};
+#include <stdlib.h>
 
+struct lavagna_info_t *lavagna;
 // ATTENZIONE: Questa funzione crea un loop infinito
 int handle_input(char *buffer, struct user_info_t *user) {
   if (strcmp(buffer, "QUIT") == 0) {
@@ -13,7 +10,38 @@ int handle_input(char *buffer, struct user_info_t *user) {
     return 0;
   }
   if (strcmp(buffer, "CREATE_CARD") == 0) {
-    printf("User [%d] created a card\n", ntohs(user->addr.sin_port));
+    // chiedo all'utente l'id della card
+    strcpy(buffer, "[lavagna] Card ID: ");
+    send(user->socket, buffer, strlen(buffer), 0);
+    memset(buffer, 0, sizeof(*buffer));
+    int bytes_received = recv(user->socket, buffer, sizeof(buffer), 0);
+    if (bytes_received <= 0) {
+      perror("recv");
+      return -1;
+    }
+    int id = atoi(buffer);
+
+    // TODO: verificare che l'id sia univoco
+
+    // chiedo all'utente la descrizione della card
+    strcpy(buffer, "[lavagna] Card Description: ");
+    send(user->socket, buffer, strlen(buffer), 0);
+    memset(buffer, 0, sizeof(*buffer));
+    bytes_received = recv(user->socket, buffer, sizeof(buffer), 0);
+    if (bytes_received <= 0) {
+      perror("recv");
+      return -1;
+    }
+    char description[1024];
+    memcpy(description, buffer, bytes_received);
+
+    // creo la card
+    struct card_info_t *card = CREATE_CARD(user, id, description);
+    add_card(lavagna, card);
+    strcpy(buffer, "[lavagna] Card Created Successfully");
+    // send(user->socket, buffer, strlen(buffer), 0);
+
+    print_cards(lavagna);
     return 1;
   }
   return 1;
@@ -28,8 +56,7 @@ void *handle_user(void *arg) {
   char buffer[1024];
   while (1) {
     memset(buffer, 0, sizeof(buffer));
-    ssize_t bytes_received =
-        recv(user->socket, buffer, sizeof(buffer), MSG_WAITALL);
+    ssize_t bytes_received = recv(user->socket, buffer, sizeof(buffer), 0);
     if (bytes_received < 0) {
       perror("recv");
       break;
@@ -58,6 +85,13 @@ void *handle_user(void *arg) {
 
 int main() {
   struct sockaddr_in server_addr, user_addr;
+
+  lavagna = malloc(sizeof(struct lavagna_info_t));
+  lavagna->id = 0;
+
+  lavagna->colonne[TODO] = NULL;
+  lavagna->colonne[DOING] = NULL;
+  lavagna->colonne[DONE] = NULL;
 
   memset(&server_addr, 0, sizeof(server_addr));
   memset(&user_addr, 0, sizeof(user_addr));

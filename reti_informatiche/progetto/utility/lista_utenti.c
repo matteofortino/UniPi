@@ -4,8 +4,7 @@
  * nuovo utente corrispondente al comando HELLO; la remove_user e' la funzione
  * di deregistrazione di un utente corrispondente al comando QUIT;
  */
-#pragma once
-#include "../common.h"
+#include "../all.h"
 int num_users = 0;
 
 // mutex per gli inserimenti e le rimozioni dalla lista degli utenti

@@ -1,4 +1,4 @@
-#include "./lista_utenti.c"
+#include "../all.h"
 // lista dei comandi disponibili (matricola pari)
 const char *commands[] = {
     "HELLO",          "CREATE_CARD",    "QUIT",      "MOVE_CARD",
@@ -11,19 +11,41 @@ void QUIT(struct user_info_t *user) {
   printf("User [%d] disconnected\n", ntohs(user->addr.sin_port));
   remove_user(ntohs(user->addr.sin_port));
   print_users();
-  close(user->socket);
-  free(user);
 }
-int id = 0;
-void CREATE_CARD(int port) {
+
+// funzione per la creazione di una nuova card
+struct card_info_t *CREATE_CARD(struct user_info_t *user, int id,
+                                char *description) {
   struct card_info_t *card = malloc(sizeof(struct card_info_t));
-  card->id = id++;
+  card->id = id;
   card->state = TODO;
-  char buffer[1024];
-  printf("Insierisci una descrizione per la card: ");
-  fgets(buffer, sizeof(buffer), stdin);
-  buffer[strlen(buffer) - 1] = '\0';
-  strcpy(card->description, buffer);
-  card->utente = port;
+  card->utente = ntohs(user->addr.sin_port);
   card->timestamp = time(NULL);
+  memcpy(card->description, description, strlen(description) + 1);
+
+  return card;
+}
+void add_card(struct lavagna_info_t *lavagna, struct card_info_t *card) {
+  const int state = card->state;
+  if (lavagna->colonne[state] == NULL)
+    lavagna->colonne[state] = card;
+  else {
+    struct card_info_t *current = lavagna->colonne[state];
+    while (current->next != NULL)
+      current = current->next;
+    current->next = card;
+  }
+}
+
+void print_cards(struct lavagna_info_t *lavagna) {
+  for (int state = TODO; state <= DONE; state++) {
+    struct card_info_t *card = lavagna->colonne[state];
+    while (card != NULL) {
+      printf(
+          "Card ID: %d\nDescription: %s\nSTATE: %d\nUser: %d\nTimestamp: %d\n",
+          card->id, card->description, card->state, card->utente,
+          card->timestamp);
+      card = card->next;
+    }
+  }
 }

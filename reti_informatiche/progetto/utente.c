@@ -1,7 +1,7 @@
-#include "utility/comandi.c"
+#include "all.h"
+#include <stdio.h>
 
-#define NUM_COMMANDS (int)(sizeof(commands) / sizeof(commands[0]))
-
+#define NUM_COMMANDS 12
 // Confronta buffer con i comandi. Restituisce il comando trovato o NULL
 const char *match_command(const char *buffer) {
   if (!buffer)
@@ -61,16 +61,31 @@ int main(int argc, char **argv) {
     buffer[strlen(buffer) - 1] = '\0';
     if (match_command(buffer) == NULL) {
       printf("Invalid command\n");
+      continue;
     }
+    send(sockfd, buffer, strlen(buffer), 0);
+
     if (strcmp(buffer, "QUIT") == 0) {
       printf("Connection closed.\n");
       close(sockfd);
       exit(EXIT_SUCCESS);
     }
     if (strcmp(buffer, "CREATE_CARD") == 0) {
-      CREATE_CARD(port);
-    }
+      // invio dell'id
+      memset(buffer, 0, sizeof(buffer));
+      recv(sockfd, buffer, sizeof(buffer), 0);
+      printf("%s", buffer);
+      fgets(buffer, sizeof(buffer), stdin);
+      buffer[strlen(buffer) - 1] = '\0';
+      send(sockfd, buffer, strlen(buffer), 0);
 
-    send(sockfd, buffer, strlen(buffer), 0);
+      // invio della descrizione
+      memset(buffer, 0, sizeof(buffer));
+      recv(sockfd, buffer, sizeof(buffer), 0);
+      printf("%s", buffer);
+      fgets(buffer, sizeof(buffer), stdin);
+      buffer[strlen(buffer) - 1] = '\0';
+      send(sockfd, buffer, strlen(buffer), 0);
+    }
   }
 }
