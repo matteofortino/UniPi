@@ -11,6 +11,7 @@
 #define ALL
 #define HOST "127.0.0.1"
 #define LAVAGNA_PORT 5678
+#define BUFFER_SIZE 1024
 
 extern const char *commands[];
 enum lavagna_states { TODO = 0, DOING = 1, DONE = 2 };

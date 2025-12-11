@@ -3,7 +3,6 @@
 #include <stdlib.h>
 
 struct lavagna_info_t *lavagna;
-// ATTENZIONE: Questa funzione crea un loop infinito
 int handle_input(char *buffer, struct user_info_t *user) {
   if (strcmp(buffer, "QUIT") == 0) {
     QUIT(user);
@@ -13,8 +12,8 @@ int handle_input(char *buffer, struct user_info_t *user) {
     // chiedo all'utente l'id della card
     strcpy(buffer, "[lavagna] Card ID: ");
     send(user->socket, buffer, strlen(buffer), 0);
-    memset(buffer, 0, sizeof(*buffer));
-    int bytes_received = recv(user->socket, buffer, sizeof(buffer), 0);
+    memset(buffer, 0, BUFFER_SIZE);
+    int bytes_received = recv(user->socket, buffer, BUFFER_SIZE, 0);
     if (bytes_received <= 0) {
       perror("recv");
       return -1;
@@ -26,20 +25,21 @@ int handle_input(char *buffer, struct user_info_t *user) {
     // chiedo all'utente la descrizione della card
     strcpy(buffer, "[lavagna] Card Description: ");
     send(user->socket, buffer, strlen(buffer), 0);
-    memset(buffer, 0, sizeof(*buffer));
-    bytes_received = recv(user->socket, buffer, sizeof(buffer), 0);
+    memset(buffer, 0, BUFFER_SIZE);
+    bytes_received = recv(user->socket, buffer, BUFFER_SIZE, 0);
     if (bytes_received <= 0) {
       perror("recv");
       return -1;
     }
-    char description[1024];
+    char description[BUFFER_SIZE];
+    memset(description, 0, sizeof(description));
+
     memcpy(description, buffer, bytes_received);
 
     // creo la card
     struct card_info_t *card = CREATE_CARD(user, id, description);
     add_card(lavagna, card);
     strcpy(buffer, "[lavagna] Card Created Successfully");
-    // send(user->socket, buffer, strlen(buffer), 0);
 
     print_cards(lavagna);
     return 1;
@@ -47,13 +47,12 @@ int handle_input(char *buffer, struct user_info_t *user) {
   return 1;
 }
 
-// ATTENZIONE: Questa funzione crea un loop infinito
 void *handle_user(void *arg) {
   struct user_info_t *user = (struct user_info_t *)arg;
 
   add_user(user->socket, user->addr);
   print_users();
-  char buffer[1024];
+  char buffer[BUFFER_SIZE];
   while (1) {
     memset(buffer, 0, sizeof(buffer));
     ssize_t bytes_received = recv(user->socket, buffer, sizeof(buffer), 0);

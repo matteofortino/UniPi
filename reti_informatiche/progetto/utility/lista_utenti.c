@@ -58,6 +58,6 @@ void print_users() {
     u = u->next;
   }
   printf("========================\n");
-  printf("Users number: %d\n", num_users);
+  printf("Number of users: %d\n", num_users);
   pthread_mutex_unlock(&users_mutex);
 }

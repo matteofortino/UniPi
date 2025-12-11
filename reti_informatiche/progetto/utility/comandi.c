@@ -21,7 +21,7 @@ struct card_info_t *CREATE_CARD(struct user_info_t *user, int id,
   card->state = TODO;
   card->utente = ntohs(user->addr.sin_port);
   card->timestamp = time(NULL);
-  memcpy(card->description, description, strlen(description) + 1);
+  strcpy(card->description, description);
 
   return card;
 }
