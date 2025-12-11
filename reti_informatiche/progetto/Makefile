@@ -1,23 +1,19 @@
 CC = gcc
 CFLAGS = -Wall -Wextra -g
 
-# Directories
+# Source directories
 SRC_UTIL = utility
-BIN = bin
 
 # Object files
 OBJ_UTIL = $(SRC_UTIL)/comandi.o $(SRC_UTIL)/lista_utenti.o
-OBJ_LAVAGNA = lavagna.o $(SRC_UTIL)/comandi.o $(SRC_UTIL)/lista_utenti.o
-OBJ_UTENTE  = utente.o  $(SRC_UTIL)/comandi.o $(SRC_UTIL)/lista_utenti.o
+OBJ_LAVAGNA = lavagna.o $(OBJ_UTIL)
+OBJ_UTENTE  = utente.o  $(OBJ_UTIL)
 
-# Executables
-TARGET_LAVAGNA = $(BIN)/lavagna
-TARGET_UTENTE  = $(BIN)/utente
+# Executables (nella root)
+TARGET_LAVAGNA = lavagna
+TARGET_UTENTE  = utente
 
-all: dirs $(TARGET_LAVAGNA) $(TARGET_UTENTE)
-
-dirs:
-	mkdir -p $(BIN)
+all: $(TARGET_LAVAGNA) $(TARGET_UTENTE)
 
 # Build executables
 $(TARGET_LAVAGNA): $(OBJ_LAVAGNA)
@@ -26,21 +22,23 @@ $(TARGET_LAVAGNA): $(OBJ_LAVAGNA)
 $(TARGET_UTENTE): $(OBJ_UTENTE)
 	$(CC) $(CFLAGS) -o $@ $^
 
-# Compile modules in utility/
-$(SRC_UTIL)/comandi.o: $(SRC_UTIL)/comandi.c all.h $(SRC_UTIL)/lista_utenti.o
-	$(CC) $(CFLAGS) -c $< -o $@
-
-$(SRC_UTIL)/lista_utenti.o: $(SRC_UTIL)/lista_utenti.c all.h
-	$(CC) $(CFLAGS) -c $< -o $@
-
-# Compile main programs
+# Compilation rules
 lavagna.o: lavagna.c all.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 utente.o: utente.c all.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
-clean:
-	rm -f *.o $(SRC_UTIL)/*.o
+$(SRC_UTIL)/comandi.o: $(SRC_UTIL)/comandi.c all.h
+	$(CC) $(CFLAGS) -c $< -o $@
 
-.PHONY: all clean dirs
+$(SRC_UTIL)/lista_utenti.o: $(SRC_UTIL)/lista_utenti.c all.h
+	$(CC) $(CFLAGS) -c $< -o $@
+
+# Clean
+clean:
+	rm -f *.o $(SRC_UTIL)/*.o $(TARGET_LAVAGNA) $(TARGET_UTENTE)
+
+clear: clean
+
+.PHONY: all clean clear
