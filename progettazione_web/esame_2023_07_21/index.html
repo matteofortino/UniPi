@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      body {
+        height: 100vh;
+        width: 100vw;
+        margin: 0;
+        padding: 0;
+        display: flex;
+      }
+      .blu {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        width: 30%;
+        background-color: lightblue;
+        justify-content: space-between;
+      }
+      .form {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        height: 200px;
+      }
+      .form,
+      p {
+        padding: 20px;
+      }
+      input {
+        height: 40px;
+      }
+      button {
+        width: 70px;
+        height: 30px;
+      }
+      input:invalid {
+        background-color: red;
+      }
+      .viola {
+        width: 70%;
+        padding: 20px;
+        background-color: plum;
+      }
+      .tabella {
+        margin-top: 20px;
+        border: 1px solid black;
+        border-collapse: collapse;
+        font-size: 20px;
+      }
+      th,
+      td {
+        border: 1px solid black;
+        padding: 10px;
+      }
+      #esporta-ordinato {
+        width: 250px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="blu">
+      <div class="form">
+        <label for="nome">Nome</label>
+        <input
+          type="text"
+          name="nome"
+          id="nome"
+          pattern="^[A-Z][a-z]{1,}$"
+          placeholder="Mario"
+        />
+
+        <label for="cognome">Cognome</label>
+        <input
+          type="text"
+          name="cognome"
+          id="cognome"
+          pattern="^[A-Z][a-z]{1,}$"
+          placeholder="Rossi"
+        />
+
+        <label for="telefono">telefono</label>
+        <input
+          type="text"
+          name="telefono"
+          id="telefono"
+          pattern="^[1-9]{10}$"
+          placeholder="1234567890"
+        />
+
+        <button id="inserisci">inserisci</button>
+      </div>
+
+      <p>Tempo rimanente: <span id="tempo"></span></p>
+    </div>
+    <div class="viola">
+      <button id="esporta">esporta</button>
+      <button id="esporta-ordinato">esporta (ordinando per cognome)</button>
+      <table class="tabella">
+        <tr>
+          <th>Selezionato</th>
+          <th>Nome</th>
+          <th>Cognome</th>
+          <th>Telefono</th>
+          <th>Data</th>
+        </tr>
+      </table>
+    </div>
+    <script>
+      const nome = document.querySelector("#nome");
+      const cognome = document.querySelector("#cognome");
+      const telefono = document.querySelector("#telefono");
+      const inserisci = document.querySelector("#inserisci");
+      const tabella = document.querySelector(".tabella");
+      const esporta = document.querySelector("#esporta");
+      const esportaOrdinato = document.querySelector("#esporta-ordinato");
+
+      function esportazioneOrdinata() {
+        const myWindow = window.open("", "", "height=600,width=800");
+
+        const rows = Array.from(document.querySelectorAll(".row"));
+        const dati = [];
+
+        rows.forEach((row) => {
+          if (row.children[0].children[0].checked) {
+            dati.push({
+              nome: row.children[1].textContent,
+              cognome: row.children[2].textContent,
+              telefono: row.children[3].textContent,
+              data: row.children[4].textContent,
+            });
+          }
+        });
+        dati.sort((a, b) => a.cognome.localeCompare(b.cognome));
+
+        dati.forEach((dato) => {
+          myWindow.document.write(
+            dato.nome +
+              ", " +
+              dato.cognome +
+              ", " +
+              dato.telefono +
+              ", " +
+              dato.data +
+              "<br>"
+          );
+        });
+      }
+
+      function esportazione() {
+        const myWindow = window.open("", "", "height=600,width=800");
+
+        const rows = Array.from(document.querySelectorAll(".row"));
+        const dati = [];
+
+        rows.forEach((row) => {
+          if (row.children[0].children[0].checked) {
+            dati.push({
+              nome: row.children[1].textContent,
+              cognome: row.children[2].textContent,
+              telefono: row.children[3].textContent,
+              data: row.children[4].textContent,
+            });
+          }
+        });
+
+        dati.forEach((dato) => {
+          myWindow.document.write(
+            dato.nome +
+              ", " +
+              dato.cognome +
+              ", " +
+              dato.telefono +
+              ", " +
+              dato.data +
+              "<br>"
+          );
+        });
+      }
+
+      function inserimento() {
+        const row = document.createElement("tr");
+        row.classList.add("row");
+        const checkbox = document.createElement("input");
+        checkbox.checked = true;
+        checkbox.classList.add("checkbox");
+        let td = document.createElement("td");
+        td.append(checkbox);
+        checkbox.type = "checkbox";
+        row.append(td);
+        const informazioni = [nome.value, cognome.value, telefono.value];
+
+        informazioni.forEach((informazione) => {
+          const td = document.createElement("td");
+          td.textContent = informazione;
+          row.append(td);
+        });
+
+        td = document.createElement("td");
+        const date = new Date();
+        const formatted = new Intl.DateTimeFormat("en-GB").format(date);
+        const timeFormatted = new Intl.DateTimeFormat("en-GB", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: false,
+        }).format(date);
+        td.textContent = formatted + ", " + timeFormatted;
+        row.append(td);
+
+        tabella.append(row);
+      }
+
+      function startTimer() {
+        document.querySelector("#tempo").innerText = "100";
+        let intervalId = setInterval(() => {
+          document.querySelector("#tempo").innerText--;
+          if (document.querySelector("#tempo").innerText == "0") {
+            clearInterval(intervalId);
+            inserisci.disabled = true;
+          }
+        }, 1000);
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        startTimer();
+        inserisci.addEventListener("click", inserimento);
+        esporta.addEventListener("click", esportazione);
+        esportaOrdinato.addEventListener("click", esportazioneOrdinata);
+      });
+    </script>
+  </body>
+</html>
