@@ -1,0 +1,87 @@
+Aggiungiamo al nucleo il meccanismo della {\em message queue (MQ)}.
+
+Un qualunque processo pu\`o accodare un nuovo messaggio sulla MQ. I processi
+che vogliono leggere i messaggi accodati nella MQ devono prima registrarsi.
+Registrandosi acquisiscono il diritto di leggere tutti i messaggi accodati
+da quel momento in poi.
+Ogni messaggio accodato deve essere letto da tutti i processi che risultavano
+registrati nel momento in cui il messaggio era stato accodato. A quel punto
+diciamo che il messaggio \`e letto {\em completamente} e pu\`o essere rimosso
+dalla coda.
+
+I processi registrati come lettori non possono accodare messaggi.
+
+La MQ ha una dimensione finita e viene usata come un array circolare.
+I processi scrittori che trovano la MQ piena ricevono un errore.
+I processi lettori si bloccano quando non trovano messaggi che non avevano gi\`a letto e si bloccano
+in attesa di un nuovo messaggio. I processi scrittori si bloccano fino a quando il loro
+messaggio non \`e stato letto completamente.
+
+Per realizzare il meccanismo appena descritto introduciamo le seguenti strutture dati:
+\begin{verbatim}
+struct mq_msg {
+    des_proc *sender;
+    natq toread;
+};
+struct mq_des {
+    natq nreaders;
+    mq_msg mq[MQ_SIZE];
+    natq head;
+    natq tail;
+    des_proc *w_readers;
+    natq nwaiting;
+};
+\end{verbatim}
+La struttura \verb|mq_msg| descrive un messaggio, con il campo \verb|sender| che punta
+al processo che lo ha inviato (i dettagli del messaggio si trovano nel descrittore del processo,
+si veda pi\`u avanti),
+mentre il campo \verb|toread| conta il numero di processi che hanno diritto a leggerlo
+e ancora non l'hanno fatto.
+La struttura \verb|mq_des| descrive la MQ\@.
+Il campo \verb|nreaders| conta il numero di processi attivi registrati per la lettura;
+il campo \verb|mq| \`e l'array circolare di messaggi; \verb|head| \`e l'indice della testa
+dell'array (posizione dell'ultimo messaggio non ancora completamente letto) mentre \verb|tail|
+\`e l'indice della coda dell'array (posizione in cui andr\`a inserito il prossimo messaggio);
+\verb|w_readers| \`e una coda di processi bloccati in attesa di poter ricevere un messaggio,
+mentre \verb|nwaiting| conta i processi accodati su \verb|w_readers|.
+
+Aggiungiamo anche i seguenti campi ai descrittori di processo:
+\begin{verbatim}
+    bool mq_reader;
+    natq mq_ntr;
+    char *mq_buf;
+    natq mq_buflen;
+\end{verbatim}
+Il campo \verb|mq_reader| vale true se il processo \`e registrato come lettore della MQ;
+il campo \verb|mq_ntr| \`e significativo per i processi registrati come lettori, e contiene
+l'indice nella MQ del prossimo messaggio che il processo deve leggere; i campi \verb|mq_buf|
+e \verb|mq_buflen| hanno un significato diverso per i processi lettori e scrittori:
+nei processi scrittori \verb|mq_buf| punta al messaggio da inviare, di lunghezza \verb|mq_buflen|;
+nei processi lettori \verb|mq_buf| punta al buffer, di capienza \verb|mq_buflen|, in cui
+il lettore vuole ricevere il messaggio. In entrambi i casi i buffer possono trovarsi
+nella memoria utente/privata dei rispettivi processi.
+
+Aggiungiamo inoltre le seguenti primitive:
+\begin{itemize}
+  \item \verb|void mq_reg()| (gi\`a realizzata):
+    registra il processo come lettore della MQ; \`e un errore se il processo \`e gi\`a registrato;
+  \item \verb|bool mq_send(char *msg, natq len)| (realizzata in parte):
+    accoda un nuovo messaggio sulla MQ; \`e un errore se il processo \`e registrato come
+    lettore; restituisce \verb|false| se non \`e stato possibile accodare il messaggio perch\'e
+    la MQ era piena;
+  \item \verb|natq mq_recv(char *buf, natq size)| (realizzata in parte):
+    restituisce il prossimo messaggio accodato nella MQ e non ancora letto dal processo.
+    \`E un errore se il processo non \`e registrato come lettore.
+    Se il messaggio \`e troppo grande per il buffer, viene considerato come letto, ma il
+    buffer non viene modificato. In ogni caso, restituisce la lunghezza del messaggio.
+\end{itemize}
+
+Le primitive abortiscono il processo chiamante in caso di errore e tengono conto dei problemi
+di Cavallo di Troia e della priorit\`a tra i processi.
+
+{\bf Attenzione}: quando un processo registrato come lettore termina, tutti i messaggi
+gi\`a accodati nella MQ e non ancora letti dal processo vanno gestiti opportunamente
+(di fatto come se li avesse letti); 
+inoltre, il processo non deve essere pi\`u contato tra i processi registrati.
+
+Modificare il file \verb|sistema.cpp| in modo da realizzare le parti mancanti.
