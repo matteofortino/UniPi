@@ -22,6 +22,8 @@ void *handle_client(void *arg) {
   int new_sd = client->socket;
 
   printf("New client thread started.\n");
+  printf("Client IP: %s\n", inet_ntoa(client->addr.sin_addr));
+  printf("Client PORT: %d\n", ntohs(client->addr.sin_port));
 
   while (1) {
     char buffer[MAX_SIZE];
