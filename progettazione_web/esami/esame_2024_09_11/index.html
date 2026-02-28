@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        display: flex;
+      }
+      section {
+        margin: 0;
+        padding: 0;
+        height: 100vh;
+      }
+      .form {
+        background-color: yellow;
+        width: 25%;
+        padding: 10px;
+      }
+      .calendario {
+        padding: 10px;
+        background-color: lightblue;
+        width: 50%;
+      }
+      .visite {
+        padding: 10px;
+        background-color: orange;
+        width: 25%;
+      }
+      .credentials {
+        display: flex;
+        justify-content: left;
+        margin-bottom: 10px;
+      }
+      label {
+        width: 80px;
+      }
+      .cell {
+        width: 40px;
+        height: 40px;
+        border: 1px solid black;
+        text-align: center;
+        vertical-align: middle;
+        background-color: white;
+      }
+      input:invalid {
+        border: 1px solid red;
+      }
+      .visits {
+        border: 1px solid black;
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <section class="form">
+      <div class="credentials">
+        <label for="name">Nome</label>
+        <input
+          type="text"
+          name="name"
+          id="name"
+          placeholder="Mario"
+          pattern="^[A-Z][a-z]+"
+          oninput="validateInputs()"
+        />
+      </div>
+      <div class="credentials">
+        <label for="surname">Cognome</label>
+        <input
+          type="text"
+          name="surname"
+          id="surname"
+          placeholder="Rossi"
+          pattern="^[A-Z][a-z]+"
+          oninput="validateInputs()"
+        />
+      </div>
+      <div class="credentials">
+        <label for="day">Giorno</label>
+        <input
+          type="text"
+          name="day"
+          id="day"
+          placeholder="Gio"
+          pattern="^(Lun|Mar|Mer|Gio|Ven|Sab|Dom)$"
+          oninput="validateInputs()"
+        />
+      </div>
+      <div class="credentials">
+        <label for="time">Ora</label>
+        <input
+          type="text"
+          name="time"
+          id="time"
+          placeholder="12"
+          pattern="^(8|9|1[0-9])$"
+          oninput="validateInputs()"
+        />
+      </div>
+      <button id="button" disabled onclick="inserisciAppuntamento()">
+        Inserisci
+      </button>
+    </section>
+    <section class="calendario">
+      <table class="table">
+        <tr>
+          <th>/</th>
+          <th>8</th>
+          <th>9</th>
+          <th>10</th>
+          <th>11</th>
+          <th>12</th>
+          <th>13</th>
+          <th>14</th>
+          <th>15</th>
+          <th>16</th>
+          <th>17</th>
+          <th>18</th>
+          <th>19</th>
+        </tr>
+        <tr>
+          <th>Lun</th>
+          <td class="cell"></td>
+          <td class="cell"></td>
+          <td class="cell"></td>
+          <td class="cell"></td>
+          <td class="cell"></td>
+          <td class="cell"></td>
+          <td class="cell"></td>
+          <td class="cell"></td>
+          <td class="cell"></td>
+          <td class="cell"></td>
+          <td class="cell"></td>
+          <td class="cell"></td>
+        </tr>
+        <tr>
+          <th>Mar</th>
+          <td class="cell"></td>
+          <td class="cell"></td>
+          <td class="cell"></td>
+          <td class="cell"></td>
+          <td class="cell"></td>
+          <td class="cell"></td>
+          <td class="cell"></td>
+          <td class="cell"></td>
+          <td class="cell"></td>
+          <td class="cell"></td>
+          <td class="cell"></td>
+          <td class="cell"></td>
+        </tr>
+        <tr>
+          <th>Mer</th>
+          <td class="cell"></td>
+          <td class="cell"></td>
+          <td class="cell"></td>
+          <td class="cell"></td>
+          <td class="cell"></td>
+          <td class="cell"></td>
+          <td class="cell"></td>
+          <td class="cell"></td>
+          <td class="cell"></td>
+          <td class="cell"></td>
+          <td class="cell"></td>
+          <td class="cell"></td>
+        </tr>
+        <tr>
+          <th>Gio</th>
+          <td class="cell"></td>
+          <td class="cell"></td>
+          <td class="cell"></td>
+          <td class="cell"></td>
+          <td class="cell"></td>
+          <td class="cell"></td>
+          <td class="cell"></td>
+          <td class="cell"></td>
+          <td class="cell"></td>
+          <td class="cell"></td>
+          <td class="cell"></td>
+          <td class="cell"></td>
+        </tr>
+        <tr>
+          <th>Ven</th>
+          <td class="cell"></td>
+          <td class="cell"></td>
+          <td class="cell"></td>
+          <td class="cell"></td>
+          <td class="cell"></td>
+          <td class="cell"></td>
+          <td class="cell"></td>
+          <td class="cell"></td>
+          <td class="cell"></td>
+          <td class="cell"></td>
+          <td class="cell"></td>
+          <td class="cell"></td>
+        </tr>
+        <tr>
+          <th>Sab</th>
+          <td class="cell"></td>
+          <td class="cell"></td>
+          <td class="cell"></td>
+          <td class="cell"></td>
+          <td class="cell"></td>
+          <td class="cell"></td>
+          <td class="cell"></td>
+          <td class="cell"></td>
+          <td class="cell"></td>
+          <td class="cell"></td>
+          <td class="cell"></td>
+          <td class="cell"></td>
+        </tr>
+        <tr>
+          <th>Dom</th>
+          <td class="cell"></td>
+          <td class="cell"></td>
+          <td class="cell"></td>
+          <td class="cell"></td>
+          <td class="cell"></td>
+          <td class="cell"></td>
+          <td class="cell"></td>
+          <td class="cell"></td>
+          <td class="cell"></td>
+          <td class="cell"></td>
+          <td class="cell"></td>
+          <td class="cell"></td>
+        </tr>
+      </table>
+    </section>
+    <section class="visite">
+      <table class="visits">
+        <tr>
+          <th>N.</th>
+          <th>Nome</th>
+          <th>Cognome</th>
+        </tr>
+      </table>
+    </section>
+
+    <script>
+      // get the DOM elements
+      const nameInput = document.getElementById("name");
+      const surnameInput = document.getElementById("surname");
+      const dayInput = document.getElementById("day");
+      const timeInput = document.getElementById("time");
+      const button = document.getElementById("button");
+      const cells = document.querySelectorAll(".cell");
+      const visitsSection = document.querySelector(".visite");
+      const visistsTable = document.querySelector(".visits");
+      // enable the button if all inputs are valid
+      function validateInputs() {
+        const nameRexexp = /^[A-Z][a-z]+$/;
+        const dayRexexp = /^(Lun|Mar|Mer|Gio|Ven|Sab|Dom)$/;
+        const timeRexexp = /^(8|9|1[0-9])$/; // 8-19 hours
+
+        if (
+          nameRexexp.test(nameInput.value) &&
+          nameRexexp.test(surnameInput.value) &&
+          dayRexexp.test(dayInput.value) &&
+          timeRexexp.test(timeInput.value)
+        ) {
+          button.disabled = false;
+        } else {
+          button.disabled = true;
+        }
+      }
+
+      const prenotazioni = Array.from(cells, () => {
+        return {
+          prenotazione: Array(3).fill({
+            numero: 0,
+            nome: "",
+            cognome: "",
+            orario: "",
+            giorno: "",
+          }),
+          contatoreVisite: 0,
+        };
+      });
+
+      function inserisciAppuntamento() {
+        const time = timeInput.value;
+        const name = nameInput.value;
+        const surname = surnameInput.value;
+        const day = dayInput.value;
+        // find the cell corresponding to the day and time
+        const dayIndex = [
+          "Lun",
+          "Mar",
+          "Mer",
+          "Gio",
+          "Ven",
+          "Sab",
+          "Dom",
+        ].indexOf(day);
+        const timeIndex = parseInt(time) - 8;
+
+        if (prenotazioni[dayIndex * 12 + timeIndex].contatoreVisite >= 3) {
+          alert(
+            "Non è possibile prenotare più di 3 visite per lo stesso orario e giorno."
+          );
+          return;
+        }
+
+        const indice = prenotazioni[dayIndex * 12 + timeIndex].contatoreVisite;
+        prenotazioni[dayIndex * 12 + timeIndex].prenotazione[indice].nome =
+          name;
+        prenotazioni[dayIndex * 12 + timeIndex].prenotazione[indice].cognome =
+          surname;
+        prenotazioni[dayIndex * 12 + timeIndex].prenotazione[indice].orario =
+          time;
+        prenotazioni[dayIndex * 12 + timeIndex].prenotazione[indice].giorno =
+          day;
+        prenotazioni[dayIndex * 12 + timeIndex].prenotazione[indice].numero++;
+
+        prenotazioni[dayIndex * 12 + timeIndex].contatoreVisite++;
+
+        aggiornaCalendario(dayIndex, timeIndex);
+      }
+
+      function aggiornaCalendario(dayIndex, timeIndex) {
+        cells[dayIndex * 12 + timeIndex].id = dayIndex + "|" + timeIndex;
+        prenotazioni.forEach((prenotazione) => {
+          if (
+            prenotazione.contatoreVisite === 1 ||
+            prenotazione.contatoreVisite === 2
+          )
+            cells[dayIndex * 12 + timeIndex].style.backgroundColor = "pink";
+          if (prenotazione.contatoreVisite === 3)
+            cells[dayIndex * 12 + timeIndex].style.backgroundColor = "red";
+        });
+      }
+
+      cells.forEach((cell) => {
+        cell.addEventListener("click", showVisits);
+      });
+
+      function showVisits(event) {
+        const cell = event.target;
+        const [dayIndexString, timeIndexString] = cell.id
+          ? cell.id.split("|")
+          : [null, null];
+        const dayIndex = Number(dayIndexString);
+        const timeIndex = Number(timeIndexString);
+        if (!cell.id) {
+          visitsSection.innerText = "Non ci sono visite oggi";
+
+          setTimeout(() => {
+            visitsSection.innerText = "";
+          }, 5000);
+          return;
+        }
+
+        for (
+          let i = 0;
+          i < prenotazioni[dayIndex * 12 + timeIndex].contatoreVisite;
+          i++
+        ) {
+          const prenotazione =
+            prenotazioni[dayIndex * 12 + timeIndex].prenotazione[i];
+          const tr = document.createElement("tr");
+          if (prenotazione % 2 == 1) tr.style.backgroundColor = "lightblue";
+          else tr.style.backgroundColor = "white";
+
+          tr.innerHTML = `<td>${prenotazione.numero}</td?><td>${prenotazione.nome}</td><td>${prenotazione.cognome}</td>`;
+          visistsTable.append(tr);
+        }
+        visistsTable.style.display = "block";
+
+        setTimeout(() => {
+          visistsTable.innerHTML = "";
+          visistsTable.style.display = "none";
+        }, 5000);
+      }
+    </script>
+  </body>
+</html>

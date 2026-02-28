@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Esame 27/01/2025</title>
+    <style>
+      .container {
+        width: 300px;
+      }
+
+      .input {
+        padding: 20px;
+        width: 100%px;
+        display: flex;
+        background-color: lightblue;
+        justify-content: space-between;
+      }
+
+      .classifica {
+        width: 100%px;
+        height: 100px;
+        background-color: yellow;
+      }
+
+      input {
+        background-color: lightcoral;
+      }
+
+      .table-container {
+        width: fit-content;
+        padding: 30px;
+        background-color: lightgray;
+        border-collapse: collapse;
+      }
+
+      table {
+        border-collapse: collapse;
+      }
+
+      .cell {
+        width: 50px;
+        height: 50px;
+        background-color: aquamarine;
+        border: 1px solid black;
+        text-align: center;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <div class="input">
+        <label for="nome">Nome</label>
+        <div>
+          <input
+            type="text"
+            name="nome"
+            id="nome"
+            oninput="getName()"
+            required
+          />
+          <button class="button" onclick="gioca()">Gioca</button>
+        </div>
+      </div>
+      <ul class="classifica"></ul>
+    </div>
+    <script>
+      const button = document.querySelector(".button");
+      const container = document.querySelector(".container");
+      const input = document.querySelector("#nome");
+
+      document.addEventListener("DOMContentLoaded", inizializza);
+
+      let colpite = 0;
+      let tentativi = 0;
+      function inizializza() {
+        button.disabled = true;
+        document.querySelector("table-container").style.display = "none";
+      }
+
+      let name;
+      function getName() {
+        name = input.value;
+        button.disabled = !isValid(name);
+
+        if (isValid(name)) input.style.backgroundColor = "white";
+        if (!isValid(name)) input.style.backgroundColor = "lightcoral";
+      }
+
+      function isValid(name) {
+        const regexp = /^[A-Z][a-zA-Z]{2,7}$/;
+        return regexp.test(name);
+      }
+
+      const ROWS = 6,
+        COLS = 6;
+
+      let grid = Array(ROWS * COLS).fill(0);
+
+      function gioca() {
+        grid.fill(0);
+        container.style.display = "none";
+        document.querySelector("table-container").style.display = "block";
+        colpite = 0;
+        tentativi = 0;
+        visualizzaGriglia();
+        inizializzaGriglia();
+      }
+
+      function inizializzaGriglia() {
+        const indici = Array.from({ length: 36 }, (_, i) => i);
+
+        for (let i = indici.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [indici[i], indici[j]] = [indici[j], indici[i]];
+        }
+
+        for (let i = 0; i < 5; i++) {
+          grid[indici[i]] = 1;
+        }
+      }
+
+      function visualizzaGriglia() {
+        const table = document.createElement("table");
+        table.classList.add("table");
+        for (let i = 0; i < ROWS; i++) {
+          const tr = document.createElement("tr");
+          tr.classList.add("row");
+          table.append(tr);
+          for (let j = 0; j < COLS; j++) {
+            const td = document.createElement("td");
+            td.classList.add("cell");
+            td.id = i + "|" + j;
+            td.addEventListener("click", spara);
+            tr.append(td);
+          }
+        }
+        const tableContainer = document.createElement("div");
+        tableContainer.classList.add("table-container");
+        tableContainer.append(table);
+        document.body.append(tableContainer);
+      }
+
+      function spara(e) {
+        tentativi++;
+        const [i, j] = e.target.id.split("|");
+        const row = Number(i);
+        const col = Number(j);
+
+        if (grid[row * ROWS + col] === 1) {
+          e.target.style.backgroundColor = "red";
+          colpite++;
+        } else {
+          e.target.style.backgroundColor = "grey";
+          e.target.innerText = contaNavi(row, col);
+        }
+        if (colpite == 5) fine();
+      }
+
+      function contaNavi(row, col) {
+        let navi = 0;
+        for (let i = -1; i <= 1; i++) {
+          for (let j = -1; j <= 1; j++) {
+            let row_off = row + i;
+            let col_off = col + j;
+            if (indexValid(row_off, col_off)) {
+              if (grid[row_off * ROWS + col_off] === 1) {
+                navi++;
+              }
+            }
+          }
+        }
+
+        return navi > 0 ? navi : "";
+      }
+
+      function indexValid(row, col) {
+        return row >= 0 && row < ROWS && col >= 0 && col < COLS;
+      }
+
+      let utenti = [];
+      function fine() {
+        container.style.display = "block";
+        document.querySelector(".table-container").style.display = "none";
+
+        utenti.push({ nome, tentativi });
+        utenti.sort((a, b) => a.tentativi - b.tentativi);
+
+        utenti.forEach((utente) => {
+          const li = document.createElement("li");
+          li.innerText = tentativi + ": " + name;
+          document.querySelector(".classifica").append(li);
+        });
+      }
+    </script>
+  </body>
+</html>
