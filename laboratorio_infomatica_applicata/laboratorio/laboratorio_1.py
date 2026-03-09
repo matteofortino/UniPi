@@ -13,7 +13,7 @@ print("\nEsercizio 2")
 
 l = [i for i in range(1, 11)]
 # better is
-l = list(range(1, 11))
+# l = list(range(1, 11))
 l_odd = [el for el in l if el % 2 == 1]
 
 print(f"lista: {l}")
