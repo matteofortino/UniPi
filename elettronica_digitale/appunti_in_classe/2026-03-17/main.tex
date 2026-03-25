@@ -1,0 +1,558 @@
+\documentclass[11pt,a4paper]{article}
+
+% ==============================
+% 📦 PACKAGES
+% ==============================
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{geometry}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{mathtools}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\usepackage{listings}
+\usepackage{tcolorbox}
+\usepackage{tikz}
+\usepackage[american]{circuitikz}
+\pgfplotsset{compat=1.18}
+
+% ==============================
+% 📐 PAGE STYLE
+% ==============================
+
+\geometry{
+    left=2.5cm,
+    right=2.5cm,
+    top=2.5cm,
+    bottom=2.5cm
+}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt}
+
+% ==============================
+% 🎨 COLOR PALETTE (Minimal & Elegant)
+% ==============================
+
+\definecolor{mainblue}{RGB}{25,55,109}
+\definecolor{lightgray}{RGB}{245,245,245}
+
+% ==============================
+% 📦 THEOREM ENVIRONMENTS
+% ==============================
+
+\newtheorem{theorem}{Teorema}[section]
+\newtheorem{definition}{Definizione}[section]
+\newtheorem{proposition}{Proposizione}[section]
+\newtheorem{example}{Esempio}[section]
+
+% ==============================
+% 🧠 CUSTOM BOXES (Very Clean)
+% ==============================
+
+\newtcolorbox{importantbox}{
+    colback=lightgray,
+    colframe=mainblue,
+    boxrule=0.8pt,
+    arc=4pt
+}
+
+% ==============================
+% 💻 CODE STYLE
+% ==============================
+
+\lstset{
+    language=C++, % cambia se vuoi (Python, Java, ecc.)
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{blue},
+    commentstyle=\color{gray},
+    stringstyle=\color{red},
+    numbers=left,
+    numberstyle=\tiny,
+    stepnumber=1,
+    numbersep=8pt,
+    backgroundcolor=\color{lightgray},
+    frame=single,
+    breaklines=true
+}
+
+% ==============================
+% 📄 DOCUMENT
+% ==============================
+
+\begin{document}
+% ==============================
+\section{lezione del 17-03-26}
+% testo
+Nella scorsa lezione abbiamo visto come usare il diodo in alcuni circuiti elementari, fra cui i \textit{rettificatori}. In particolare, finora abbiamo considerato il comportamento dei rettificatori sottoposti ad un carico resistivo $R_L$, secondo due modelli (ideale e caduta costante). 
+
+Abbiamo però che siamo riusciti soltanto a realizzare un'operazione di rettifica \textit{single phase}, mentre l'obiettivo che abbiamo quando rettifichiamo un segnale è probabilmente quello di portarlo a essere il più vicino possibile al DC (come avevamo già detto in 7.2, rettificare l'alimentazione casalinga). Per fare ciò, vediamo cosa succede se si sottopone il rettificatore ad un elemento di filtraggio \textit{reattivo}. 
+
+\subsubsection{Circuito rettificatore con condensatore}
+Vediamo quindi cosa succede se mettiamo a valle del rettificatore un \textit{condensatore}:
+\begin{center}
+\begin{circuitikz}
+	\draw (0,2) to[american voltage source, l=$V_s$] (0, 0);
+	\node[ground] at(0,0) {};
+	\draw (0,2) to[diode, l=$D$] (4,2) to[capacitor, l=$C$] (4,0);
+	\node[ground] at(4,0) {};
+	\draw (4,2) -- (5, 2);
+	\node[anchor=west] at(5,2) {$V_u$};
+\end{circuitikz}
+\end{center}
+
+Quello che accadrà in questo caso è che il condensatore, di equazione:
+$$
+I_C = C \frac{d V_u}{dt} = I_D
+$$
+ci porterà in una situazione dove:
+\begin{center}
+	\includegraphics[scale=0.3]{../images/rect_cap.png}
+\end{center}
+\begin{enumerate}
+	\item Da $t_0$ a $\frac{t_1}{2}$ (considerati gli estremi della scorsa sezione, $\frac{t_1}{2}$ è il picco di tensione) la tensione $V_s$ sarà positiva, e lo sarà anche la $V_u$, che la inseguirà con i vari dettagli che avevamo detto (una piccola caduta di potenziale e il ritardo di conduzione). Notiamo che questo processo non andrà solo ad aumentare $V_u$, ma anche a caricare il condensatore $C$;
+	\item Da $\frac{t_1}{2}$ in poi, per via della capacità $C$ (ormai carica) che vorrà mantenere il voltaggio costante, avremo che il voltaggio $V_u$ sarà pressappoco costante su $t$. 
+\end{enumerate}
+In questo caso ideale, il valore della capacità $C$ non sarà particolarmente significativo fincheé questa verrà caricata da $V_s$ abbastanza in fretta da raggiungere il picco in $\frac{t_1}{2}$. Questo perché non ci sarà nessun elemento resistivo (nel caso ideale) che potrà fungere da "sfogo" per la capacità, che andrebbe alternativamente a scaricarsi (cosa che vedremo fra poco).
+
+Per fissare il meccanismo rispetto all'analisi del comportamento dei diodi, ipotizziamo che il diodo si trovi in conduzione finché:
+$$
+I_D > 0 \implies \frac{d V_u}{dt} > 0
+$$
+e quindi la $V_u$ caricherà come $V_s$ fino a $\frac{t_1}{2}$. Dopo aver attraversato il primo picco, il condensatore no caricherà più, il diodo si trasformerà in un aperto, e quindi avremo:
+$$
+I_C = I_D = 0
+$$
+Cioè da $\frac{t_1}{2}$ in poi il diodo sarà sempre in inversa, meno i punti di cresta dove starà alla soglia di conduzione ma a corrente nulla.
+
+Questo ci sarà utile se il nostro obiettivo era quello di trasformare una tensione alternata in una tensione continua, cioè effettivamente rettificarla ad una sorgente di tensione costante nel tempo. Notiamo però che non abbiamo totalmente risolto il problema, in quanto potrebbero sempre esserci irregolarità nella retta da $\frac{t_1}{2}$ in poi date dalla scarica del condensatore o dal rumore del segnale $V_s$.
+
+\subsubsection{Circuito rettificatore con filtro RC}
+Vediamo nel dettaglio cosa intendiamo. Se reintroduciamo una resistenza di carico, in parallelo al condensatore, otteniamo la seguente configurazione:
+\begin{center}
+\begin{circuitikz}
+	\draw (0,2) to[american voltage source, l=$V_s$] (0, 0);
+	\node[ground] at(0,0) {};
+	\draw (0,2) to[diode, l=$D$] (4,2) to[capacitor, l=$C$] (4,0);
+	\draw(4,2) -- (6,2) to[resistor, l=$R_L$] (6,0) -- (4,0);
+	\node[ground] at(4,0) {};
+	\draw (6,2) -- (7, 2);
+	\node[anchor=west] at(7,2) {$V_u$};
+\end{circuitikz}
+\end{center}
+
+In questo caso il condensatore, da $\frac{t_1}{2}$ in poi, avrà modo di scaricarsi su $R_L$. In altre parole, quando il diodo entrerà in interdizione, la tensione sul condensatore tenderà a scaricarsi sulla resistenza seguendo l'equazione tipica del circuito RC:
+$$
+V_u \propto e^{-\frac{t}{\tau}}, \quad \tau = RC
+$$
+Ciò significherà che esisterà un istante, precedente al $t_0$ del ciclo successivo, dove $V_s$ salirà sopra il livello raggiunto da $V_u$, ricaricherà il condensatore (alzando il voltaggio nuovamente fino al valore di picco), permettendo che il ciclo continui.
+\begin{center}
+	\includegraphics[scale=0.3]{../images/rect_rc.png}
+\end{center}
+
+Chiamiamo questo voltaggio di caduta \textbf{ripple} voltage del rettificatore.
+
+\subsubsection{Circuito rettificatore a doppia semionda}
+L'idea che abbiamo guardando al grafico della scorsa sezione è che, se si potessero combinare i contribuiti di due diodi (uno in una direzione, e uno nell'altra, rispetto a $V_s$), allora si potrebe "riempire" il calo di tensione successivo a $\frac{t_1}{2}$ con un contributo in tensione dato dal diodo invertito.
+
+Per formalizzare quello che si è detto, introduciamo un componente detto \textbf{trasformatore}, dal simbolo:
+
+\begin{center}
+	\begin{circuitikz}
+		\draw (0,0) to[ short, i=$i_1$] (1,0)
+			to[ inductor , l=$N_1$] (1,-2)
+			-- (0, -2);
+
+		\draw (4,0) to[ short, i_=$i_2$] (3,0)
+			to[ inductor , l_=$N_2$] (3,-2)
+			-- (4, -2);
+
+			\draw (0.9,-0.6) node {$\scriptscriptstyle\bullet$};
+			\draw (2.9,-0.6) node {$\scriptscriptstyle\bullet$};
+
+			\draw (0,-0.5) node[anchor=east] {$+$};
+			\draw (0,-1.5) node[anchor=east] {$-$};
+
+			\draw (4,-0.5) node[anchor=west] {$+$};
+			\draw (4,-1.5) node[anchor=west] {$-$};
+
+			\draw (0,-1) node[anchor=east] {$V_1$};
+			\draw (4,-1) node[anchor=west] {$V_2$};
+	\end{circuitikz}
+\end{center}
+
+Questo è un componente magnetico che varia il valore efficace della tensione alternata tramite il \textit{rapporto spire}:
+$$
+n = \frac{N_1}{N_2}
+$$
+preservando la potenza ideale tra avvolgimento \textit{primario} e \textit{secondario}.
+
+Prenderemo in considerazione soltanto i trasformatori ideali, per i quali il flusso magnetico totale può essere considerato trascurabile, per cui:
+\begin{itemize}
+	\item La forza \textbf{magnetomotrice} totale dovrà essere nulla per mantenere un flusso finito (riluttanza ideale nulla):
+$$
+N_1 i_1 + N_2 i_2 = 0 \implies \frac{i_2}{i_1} = -\frac{N_1}{N_2} = -n
+$$
+	\item Vale la legge di \textbf{Faraday} alle tensioni:
+$$
+V_1 = N_1 \frac{d \phi}{dt}, \ V_2 = N_2 \frac{d \phi}{dt} \implies \frac{V_1}{V_2} = \frac{N_1}{N_2} = n
+$$
+\end{itemize}
+
+Notiamo che ciò di cui abbiamo effettivamente bisogno è di un trasformatore a \textbf{presa centrale} (o a \textit{massa centrale}, o ancora in inglese \textit{center tap}), cioè un trasformatore che ha il punto centrale di uno degli avvolgimenti ancorato a massa.
+\begin{center}
+\begin{circuitikz}
+	\node[anchor=east] at(-3,1) {$+$};
+	\node[anchor=east] at(-3,-1) {$-$};
+	\node[anchor=east] at(-3,0) {$V_s$};
+
+	\node[anchor=west] at(1, 2) {$+$};
+	\node[anchor=west] at(1, 1) {$V_A$};
+	\node[anchor=west] at(1, 0) {$-$};
+	\node[anchor=west] at(1,-1) {$V_B$};
+	\node[anchor=west] at(1,-2) {$+$};
+
+	\node[ground, rotate=90] at(0,0) {};
+
+	\draw (-3, -1) -- (-1, -1) to[inductor] (-1, 1) -- (-3, 1);
+
+	\draw (0,2) to[inductor, l=$A$] (0, 0);
+	\draw (0,0) to[inductor, l=$B$] (0, -2);
+	
+
+	\draw (-0.9,0.4) node {$\scriptscriptstyle\bullet$};
+	\draw (-0.1,1.4) node {$\scriptscriptstyle\bullet$};
+	\draw (-0.1,-0.6) node {$\scriptscriptstyle\bullet$};
+
+	\draw (-0.5,1) -- (-0.5,-1);
+\end{circuitikz}
+\end{center}
+Questo significa che le due estremità che resteranno esposte ($V_A$ e $V_B$) risulteranno, sottoposte al voltaggio $V_s$ sull'altro avvolgimento, alternativamente in tensione. 
+
+Una caratteristica fondamentale da notare del trasformatore a presa centrale è che i voltaggi $V_A$ e $V_B$ visti dai due estremi saranno la metà del voltaggio che avremo sull'intero trasformatore (preso $n = 1$, di $V_s$). Per avere un comportamento simile ad un trasformaore normale, quindi, converrà prendere qualcosa come $n \approx 0.5$.
+
+Vediamo quindi com'è disposto il circuito rettificatore a \textit{doppia semionda} che sfrutta il trasformatore a massa centrale: 
+\begin{center}
+\begin{circuitikz}
+	\draw (-3, 1) to[american voltage source, l=$V_s$] (-3, -1)
+	-- (-1, -1) to[inductor] (-1, 1) -- (-3, 1);
+
+	\draw (0,2) to[inductor, l=$A$] (0, 0);
+	\draw (0,2) to[diode, l=$D_1$] (4,2) -- (4,0);
+	\draw (0,0) to[inductor, l=$B$] (0, -2);
+	\draw (0,-2) to[diode, l=$D_2$] (4,-2) -- (4,0);
+	
+	\node[ground, rotate=90] at(0,0) {};
+	
+	\draw(4,2) -- (6,2) to[resistor, l=$R_L$] (6,0);
+	\node[ground] at(6,0) {};
+	\draw (6,2) -- (7, 2);
+	\node[anchor=west] at(7,2) {$V_u$};
+
+
+	\draw (-0.9,0.4) node {$\scriptscriptstyle\bullet$};
+	\draw (-0.1,1.4) node {$\scriptscriptstyle\bullet$};
+	\draw (-0.1,-0.6) node {$\scriptscriptstyle\bullet$};
+
+	\draw (-0.5,1) -- (-0.5,-1);
+\end{circuitikz}
+\end{center}
+
+Quello che otterremo in questa situazione è che durante il primo semiperiodo, cioè da $t_0$ a $t_1$, si avrà $V_s > 0$, e quindi $D_1$ sarà in conduzione e $D_2$ in interdizione. Durante il secondo semiperiodo, invece, cioè da $t_1$ a $t_2$, si avrà $V_s > 0$, e quindi $D_2$ sarà in conduzione e $D_1$ in interdizione.
+
+La verifica si ha analizzando i due semiperiodi:
+\begin{itemize}
+\item $t_0 < t < t_1$ \\
+Per il primo semiperiodo, poniamo la condizione di conduzione a $D_1$ e di interdizione a $D_2$, per cui la corrente scorre in senso oraria sulla maglia formata dai diodi.
+
+\par\smallskip
+\textbf{\textsf{Verifica}}
+La verifica si fa imponendo la condizione di conduzione a $D_1$ e di interdizione a $D_2$:
+$$
+I_{D_1} = \frac{V_A}{R_L} > 0, \quad V_{AK2} = -V_B - V_A < 0
+$$
+\item $t_0 < t < t_1$ \\
+Per il secondo semiperiodo, poniamo la condizione di conduzione a $D_2$ e di interdizione a $D_1$, per cui la corrente scorre in senso antiorario sulla maglia formata dai diodi.
+
+\par\smallskip
+\textbf{\textsf{Verifica}}
+La verifica si fa imponendo la condizione di conduzione a $D_2$ e di interdizione a $D_1$:
+$$
+I_{D_2} = -\frac{V_B}{R_L} > 0, \quad V_{AK1} = V_A - (-V_B) < 0
+$$
+\end{itemize}
+
+\newpage
+
+Il risultato sulla forma d'onda è che otteniamo un valore non rettificato in \textit{single phase}, ma in qualche modo il valore assoluto del segnale da $V_s$, cioè:
+\begin{center}
+	\includegraphics[scale=0.3]{../images/rect_trans.png}
+\end{center}
+Chiamiamo questo tipo di rettifica \textit{full wave rectification}, per distinguerla appunto dalla \textit{single phase rectification} vista in 7.2.1.
+Abbiamo quindi riempito il secondo semiperiodo come ci eravamo prefissi di fare.
+
+\subsubsection{Circuito rettificatore a doppia semionda con filtro RC}
+Concludiamo reintroducendo il condensatore $C$ per "stabilizzare" in qualche modo il voltaggio. Non facciamo il caso con solo $C$, in quanto sarebbe banale ed uguale al caso senza doppia semionda, e passiamo direttamente al filtro RC: \begin{center}
+\begin{circuitikz}
+	\draw (-3, 1) to[american voltage source, l=$V_s$] (-3, -1)
+	-- (-1, -1) to[inductor] (-1, 1) -- (-3, 1);
+
+	\draw (0,2) to[inductor, l=$A$] (0, 0);
+	\draw (0,2) to[diode, l=$D_1$] (4,2) -- (4,0);
+	\draw (0,0) to[inductor, l=$B$] (0, -2);
+	\draw (0,-2) to[diode, l=$D_2$] (4,-2) -- (4,0);
+	
+	\node[ground, rotate=90] at(0,0) {};
+
+	\draw(4,2) -- (8,2) to[resistor, l=$R_L$] (8,0) -- (6,0);
+	\draw(6,2) to[capacitor, l=$C$] (6,0);
+	\node[ground] at(6,0) {};
+	\draw (8,2) -- (9, 2);
+	\node[anchor=west] at(9,2) {$V_u$};
+
+	\draw (-0.9,0.4) node {$\scriptscriptstyle\bullet$};
+	\draw (-0.1,1.4) node {$\scriptscriptstyle\bullet$};
+	\draw (-0.1,-0.6) node {$\scriptscriptstyle\bullet$};
+
+	\draw (-0.5,1) -- (-0.5,-1);
+\end{circuitikz}
+\end{center}
+
+Quello che otteniamo è qundi l'effetto combinato della doppia semionda e del condensatore. Anche in questo caso, quando il diodo entrerà in interdizione, la tensione sul condensatore tenderà a scaricare sulla resistenza seguendo l'equazione tipica del circuito RC.
+Ciò significherà che gli istanti dove $V_s$ salirà sopra il livello raggiunto da $V_u$ e quindi ricaricherà il condensatore (alzando il voltaggio nuovamente fino al valore di picco) accadranno con frequenza doppia (in corrispondenza sia di $t_0$ che di $t_1$, più opportune fasi). 
+
+\newpage
+
+Questo ci permetterà di ridurre al minimo l'effetto del ripple voltage, portando ad una forma d'onda che è molto vicina all'essere costante. Chiaramente, all'aumentare di $C$ "appiattiamo" sempre più la forma d'onda. 
+
+\begin{center}
+	\includegraphics[scale=0.3]{../images/rect_transcap.png}
+\end{center}
+
+\subsubsection{Rettificatore a ponte di Graetz}
+Una soluzione alternativa alla doppia semionda col trasformatore (che chiamiamo anche \textit{presa centrale}) è data dall'utilizzo di una particolare configurazione di 4 diodi, detta ponte di \textit{Graetz}. Questo ci permetterà di risparmiare sul trasformatore a presa centrale (ingombrante e costoso).
+
+Il circuito del ponte di Graetz è il seguente:
+\begin{center}
+\begin{circuitikz}
+	\draw (-5, 2) -- (-2, 2);
+	\draw (2, 2) -- (3, 2) -- (3, -2) -- (-5, -2);
+	\draw (0, 0) -- (5, 0);
+	\draw (0, 4) -- (5, 4);
+
+	\draw (-2, 2) to[diode, l=$D_1$] (0, 4);
+	\draw (0, 0) to[diode, l=$D_2$] (-2, 2);
+	\draw (0, 0) to[diode, l_=$D_3$] (2, 2);
+	\draw (2, 2) to[diode, l_=$D_4$] (0, 4);
+
+	\node[anchor=east] at(-5, 2) {$+$};
+	\node[anchor=east] at(-5, 0) {$V_s$};
+	\node[anchor=east] at(-5, -2) {$-$};
+	
+	\node[anchor=west] at(5, 4) {$+$};
+	\node[anchor=west] at(5, 2) {$V_u$};
+	\node[anchor=west] at(5, 0) {$-$};
+\end{circuitikz}
+\end{center}
+
+Abbiamo che a sinistra introduciamo una corrente \textit{alternata} $V_s$ e a destra estraiamo una corrente \textit{continua} $V_u$ (o almeno rettificata in \textit{full wave}, vedremo in seguito metodi analoghi a prima per stabilizzare fino a DC).
+
+Studiamo quindi il circuito nei due regimi, cioè nei due semiperiodi: 
+\begin{itemize}
+\item $t_0 < t < t_1$ \\
+Nel primo semiperiodo, i diodi $D_1$ e $D_3$ sono in conduzione, mentre i diodi $D_2$ e $D_4$ sono in interdizione. Questo significa che avremo percorsi chiusi dal $+$ di $V_s$ al $+$ di $V_u$, e dal $-$ di $V_s$ al $-$ di $V_u$. 
+
+Prenderemo quindi la parte positiva del segnale $V_s$, con:
+$$
+V_u = V_s
+$$
+
+\par\smallskip
+\textbf{\textsf{Verifica}}
+La verifica per i diodi $D_1$ e $D_3$ si fa, ponendo una certa resistenza di carico $R_L$ su $V_u$, notando che si va a formare un circuito chiuso tale che:
+$$
+I = \frac{V_s}{R_L}
+$$
+che rispetta la condizione di conduzione.
+
+Per gli altri diodi dovremo imporre le condizioni di interdizione sul voltaggio:
+$$
+V_{AK2} = - V_s, \quad V_{AK4} = - V_s
+$$
+dalle considerazioni fatte prima.
+
+\item $t_1 < t < t_2$ \\
+Nel secondo semiperiodo, saranno invece i diodi $D_2$ e $D_4$ sono in conduzione, mentre i diodi $D_1$ e $D_3$ sono in interdizione. Questo significa che avremo percorsi chiusi dal $-$ (ora positivo) di $V_s$ al $+$ di $V_u$, e dal $+$ di $V_s$ (ora negativo) al $-$ di $V_u$. 
+
+Prenderemo quindi la parte negativa rettificata del segnale $V_s$, con:
+$$
+V_u = -V_s
+$$
+
+\par\smallskip
+\textbf{\textsf{Verifica}}
+La verifica per i diodi $D_2$ e $D_4$ si fa come prima ponendo una certa resistenza di carico $R_L$ su $V_u$, notando che si va a formare un circuito chiuso tale che:
+$$
+I = \frac{V_s}{R_L}
+$$
+che rispetta la condizione di conduzione.
+
+Per gli altri diodi dovremo imporre le condizioni di interdizione sul voltaggio:
+$$
+V_{AK1} = - V_s, \quad V_{AK3} = - V_s
+$$
+dalle considerazioni fatte prima.
+
+\end{itemize}
+
+Il risultato è quindi che abbiamo ottenuto un circuito esattamente uguale al rettificatore a doppia semionda visto in 8.0.3, ma risparmiandoci il trasformatore a presa centrale. Anche il grafico della forma d'onda sarà lo stesso di 8.0.3. Nello specifico, tracciamo il circuito come:
+
+\begin{center}
+\begin{circuitikz}
+	\draw (-5, 2) -- (-2, 2);
+	\draw (2, 2) -- (3, 2) -- (3, -2) -- (-5, -2);
+	\draw (0, 0) -- (5, 0);
+	\draw (0, 4) -- (5, 4);
+
+	\draw (-2, 2) to[diode, l=$D_1$] (0, 4);
+	\draw (0, 0) to[diode, l=$D_2$] (-2, 2);
+	\draw (0, 0) to[diode, l_=$D_3$] (2, 2);
+	\draw (2, 2) to[diode, l_=$D_4$] (0, 4);
+
+	\draw (-5, 2) to[american voltage source, l=$V_s$] (-5, -2);
+	\draw (5, 4) to[resistor, l=$R$] (5, 0);
+	\node[ground] at(5,0) {};
+	\draw (5, 4) -- (6, 4);
+	\node[anchor=west] at(6,4) {$V_u$};
+\end{circuitikz}
+\end{center}
+
+\subsubsection{Rettificatore a ponte di Graetz con filtro RC}
+Come per il circuito a rettificatore a trasformatore a presa centrale, il ponte di Graetz può essere migliorato introducendo uno stage di filtraggio RC che stabilizzi la tensione $V_u$ in uscita:
+\begin{center}
+\begin{circuitikz}
+	\draw (-5, 2) -- (-2, 2);
+	\draw (2, 2) -- (3, 2) -- (3, -2) -- (-5, -2);
+	\draw (0, 0) -- (7, 0);
+	\draw (0, 4) -- (7, 4);
+
+	\draw (-2, 2) to[diode, l=$D_1$] (0, 4);
+	\draw (0, 0) to[diode, l=$D_2$] (-2, 2);
+	\draw (0, 0) to[diode, l_=$D_3$] (2, 2);
+	\draw (2, 2) to[diode, l_=$D_4$] (0, 4);
+
+	\draw (-5, 2) to[american voltage source, l=$V_s$] (-5, -2);
+	\draw (5, 4) to[resistor, l=$R$] (5, 0);
+	\draw (7, 4) to[capacitor, l=$C$] (7, 0);
+	\node[ground] at(5,0) {};
+	\draw (7, 4) -- (8, 4);
+	\node[anchor=west] at(8,4) {$V_u$};
+\end{circuitikz}
+\end{center}
+
+Anche in questo caso, questa soluzione ci permetterà di ridurre al minimo l'effetto del ripple voltage, portando ad una forma d'onda che è molto vicina all'essere costante. Chiaramente, all'aumentare di $C$ "appiattiamo" sempre più la forma d'onda. Il grafico della forma d'onda sarà lo stesso di 8.0.4.
+
+\subsubsection{Confronto fra tra presa centrale e ponte di Graetz}
+Confrontiamo le due soluzioni che abbiamo dato per la rettifica del segnale.
+
+\begin{itemize}
+	\item La soluzione a \textbf{presa centrale} per la rettifica della tensione richiede un trasformatore ingombrante e costoso, di cui solo metà avvolgimento per volta è effettivamente in operazione;
+	\item La soluzione a \textbf{ponte di Graetz} invece utilizza 4 diodi che lavorano in coppia per risolvere lo stesso problema. Solitamente i diodi sono compatti e leggeri rispetto al trasformatore della presa centrale, per cui si ottiene un circuito più compatto e più leggero.
+\end{itemize}
+
+Notiamo quindi in termini numerici quali sono le differenze principali:
+\begin{table}[H]
+\centering
+\begin{tabular}{l|c|c}
+\textbf{Caratteristica} & \textbf{Presa centrale} & \textbf{Ponte di Graetz} \\
+\hline
+Diodi necessari & 2 & 4 \\
+\hline
+PIV (Tensione Inversa) & $2V_s$ & $V_s$ \\
+\hline
+Ingombro/Peso & Elevato (Ferro/Rame) & Ridotto (Efficiente) \\
+\hline
+Caduta di tensione & $1 \times V_\gamma$ & $2 \times V_\gamma$ \\
+\end{tabular}
+\end{table}
+
+\begin{itemize}
+	\item Il numero di \textit{diodi necessari} rappresenta una metrica ovvia: il ponte di Graetz è più costoso in termini di diodi. Questo è però giustificato dal fatto che il trasformatore a presa centrale è solitamente ingombrante è costoso;
+	\item La \textbf{PIV}, o \textit{tensione inversa}, è la tensione inversa a $V_s$ necessaria a destabilizzare il rettificatore. Abbiamo che questa è doppia nel rettificatore a presa centrale, dove dobbiamo vincere entrambi gli estremi di avvolgimenti, mentre è unitaria per il rettificatore a ponte;
+	\item Anche l'\textit{ingombro/peso} del componente rettificatore finale rappresenta una metrica triviale, che abbiamo già discusso notando i vantaggi del ponte a diodi rispetto al trasformatore con tap;
+	\item Infine, notiamo che il trasformatore è leggermente più efficiente per quanto riguarda le cadute di potenziale $V_\gamma \approx 0.7 \, \mathrm{V}$ sui diodi. Questo è chiaro dal fatto che nel primo caso dobbiamo passare attraverso al più un diodo in conduzione, mentre nel ponte si passa sempre per 2 diodi in conduzione (raddoppiando la caduta complessiva).
+\end{itemize}
+
+In conclusione, il ponte di Graetz è lo standard moderno, in quanto il costo di due diodi extra è trascurabile rispetto al risparmio su peso e dimensioni del trasformatore.
+
+Detto questo, il ponte di Graetz non è perfetto: a parte il problema del costo aggiunto dei 4 (2 in più rispetto alla presa centrale) diodi, abbiamo che l’uscita di un ponte di Graetz è unidirezionale, ma fortemente pulsante. Questo significa che si ha comunque un effetto consistente del ripple voltage. Abbiamo che questa fluttuazione di tensione (ondulazione) è inaccettabile per la maggior parte dei circuiti elettronici. Ad esempio:
+
+\begin{itemize}
+	\item Nei circuiti \textit{audio}, il ripple voltage comporta un ronzio a $100 \, \mathrm{Hz}$ (in Europa, $120 \, \mathrm{Hz}$ negli Stati Uniti) negli altoparlanti;
+	\item Nei circuiti \textit{digitali} si potrebbero avere errori logici: microprocessori che lavorano ad alta frequenza potrebbero riavviarsi se sottoposti a variazione della tensione di alimentazione;
+	\item Si potrebbero avere errori di precisione nei circuiti di \textit{misura}, ovvero imprecisioni dei sensori utilizzati.
+\end{itemize}
+
+La strategia per risolvere questo problema sarà data in due passaggi:
+\begin{enumerate}
+	\item \textbf{Filtraggio}: Adottiamo un condensatore per "livellare" le valli di tensione (e questo lo abbiamo già visto, introducendo il filtro RC nei rettificatori studiati);
+	\item \textbf{Regolazione}: Introduciamo un diodo \textit{Zener} (visti in 6.1.1) per rendere l’uscita immune alle variazioni del carico. Avevamo già introdotto, infatti, come un diodo di Zener in regime di breakdown può comportarsi come un generatore di tensione costante.
+\end{enumerate}
+
+\subsubsection{Rettificatore con diodo Zener}
+Vediamo nello specifico come i diodi \textbf{Zener} vengono usati nei rettificatori. Abbiamo che questi sono, di base, componenti con le seguenti caratteristiche:
+\begin{itemize}
+    \item A differenza dei diodi comuni, il diodo Zener è progettato per lavorare stabilmente nella regione di rottura (\textit{breakdown}) senza danneggiarsi;
+	\item In questa zona, la curva $i\text{-}v$ diventa quasi verticale: grandi variazioni di corrente corrispondono a variazioni minime di tensione.
+\end{itemize}
+
+Ciò significa che il diodo Zener si comporta come segue:
+\begin{itemize}
+    \item Si comporta come un normale diodo in polarizzazione diretta.
+    \item In polarizzazione inversa, blocca la corrente fino a $V_Z$.
+    \item Superata $V_Z$, la tensione ai capi del diodo resta circa costante a $V_Z$.
+\end{itemize}
+
+Questo significa che possiamo utilizzare il diodo Zener per effettuare 2 operazioni principali:
+\begin{itemize}
+    \item \textbf{Riferimento}: il diodo in regime di breakdown fornisce una tensione costante e nota;
+    \item \textbf{Protezione}: introducendo un diodo Zener possiamo imitare i picchi di tensione.
+\end{itemize}
+
+Avremo bisogno di modificare il modello a caduta tensione che avevamo introdotto per il diodo, introducendo la zona di breakdown per voltaggi negativi. 
+
+\begin{center}
+	\includegraphics[scale=0.25]{../images/zener.png}
+\end{center}
+
+Il modello a caduta costante verrà quindi variato introducendo le 3 regioni operative:
+\begin{enumerate}
+    \item Conduzione in polarizzazione diretta: 
+    \[
+    V_{AK} = V_\gamma, \quad \text{verificare } I_D \geq 0
+    \]
+
+    \item Interdizione:
+    \[
+    I_D = 0, \quad \text{verificare } -|V_Z| < V_{AK} < V_\gamma
+    \]
+
+    \item Conduzione in polarizzazione inversa (breakdown): 
+    \[
+    V_{AK} = -|V_Z|, \quad \text{verificare } I_D \leq 0
+    \]
+    Questa è la zona di funzionamento utilizzata per il regolatore.
+\end{enumerate} 
+
+\end{document}
+\end{document}
+
