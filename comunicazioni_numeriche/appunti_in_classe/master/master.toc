@@ -1,0 +1,18 @@
+\contentsline {section}{\numberline {1}lezione del 17-03-26}{2}{section.1}%
+\contentsline {subsection}{\numberline {1.1}Trasformata di Fourires discreta}{2}{subsection.1.1}%
+\contentsline {subsection}{\numberline {1.2}Trasformata di Fourier discreta veloce}{3}{subsection.1.2}%
+\contentsline {subsection}{\numberline {1.3}Antitrasformata di Fourtier}{3}{subsection.1.3}%
+\contentsline {subsection}{\numberline {1.4}Teroemi sulla traformata di Fourier}{3}{subsection.1.4}%
+\contentsline {section}{\numberline {2}lezione del 19-03-26}{6}{section.2}%
+\contentsline {subsection}{\numberline {2.1}Esperimenti non indipendenti}{6}{subsection.2.1}%
+\contentsline {subsubsection}{\numberline {2.1.1}Canale di comunicazione binario simmetrico}{7}{subsubsection.2.1.1}%
+\contentsline {subsection}{\numberline {2.2}Variabili aleatorie}{8}{subsection.2.2}%
+\contentsline {subsubsection}{\numberline {2.2.1}Funzione di distribuzione}{8}{subsubsection.2.2.1}%
+\contentsline {subsubsection}{\numberline {2.2.2}Proprità della funzione di distribuzione}{8}{subsubsection.2.2.2}%
+\contentsline {subsection}{\numberline {2.3}Variabili aleatori discrete}{9}{subsection.2.3}%
+\contentsline {section}{\numberline {3}lezione del 20-03-26}{10}{section.3}%
+\contentsline {subsection}{\numberline {3.1}Variabili aleatorie binomiali}{10}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}Varibili aleatorie di Poisson}{10}{subsection.3.2}%
+\contentsline {subsubsection}{\numberline {3.2.1}Decadimento Radioattivo}{10}{subsubsection.3.2.1}%
+\contentsline {subsection}{\numberline {3.3}Variabili aleatorie continue}{11}{subsection.3.3}%
+\contentsline {subsection}{\numberline {3.4}Variabile aleatorie uniformi}{12}{subsection.3.4}%
