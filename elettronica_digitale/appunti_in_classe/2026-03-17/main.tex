@@ -97,7 +97,7 @@ Nella scorsa lezione abbiamo visto come usare il diodo in alcuni circuiti elemen
 
 Abbiamo però che siamo riusciti soltanto a realizzare un'operazione di rettifica \textit{single phase}, mentre l'obiettivo che abbiamo quando rettifichiamo un segnale è probabilmente quello di portarlo a essere il più vicino possibile al DC (come avevamo già detto in 7.2, rettificare l'alimentazione casalinga). Per fare ciò, vediamo cosa succede se si sottopone il rettificatore ad un elemento di filtraggio \textit{reattivo}. 
 
-\subsubsection{Circuito rettificatore con condensatore}
+\subsection{Circuito rettificatore con condensatore}
 Vediamo quindi cosa succede se mettiamo a valle del rettificatore un \textit{condensatore}:
 \begin{center}
 \begin{circuitikz}
@@ -136,7 +136,7 @@ Cioè da $\frac{t_1}{2}$ in poi il diodo sarà sempre in inversa, meno i punti d
 
 Questo ci sarà utile se il nostro obiettivo era quello di trasformare una tensione alternata in una tensione continua, cioè effettivamente rettificarla ad una sorgente di tensione costante nel tempo. Notiamo però che non abbiamo totalmente risolto il problema, in quanto potrebbero sempre esserci irregolarità nella retta da $\frac{t_1}{2}$ in poi date dalla scarica del condensatore o dal rumore del segnale $V_s$.
 
-\subsubsection{Circuito rettificatore con filtro RC}
+\subsection{Circuito rettificatore con filtro RC}
 Vediamo nel dettaglio cosa intendiamo. Se reintroduciamo una resistenza di carico, in parallelo al condensatore, otteniamo la seguente configurazione:
 \begin{center}
 \begin{circuitikz}
@@ -161,7 +161,7 @@ Ciò significherà che esisterà un istante, precedente al $t_0$ del ciclo succe
 
 Chiamiamo questo voltaggio di caduta \textbf{ripple} voltage del rettificatore.
 
-\subsubsection{Circuito rettificatore a doppia semionda}
+\subsection{Circuito rettificatore a doppia semionda}
 L'idea che abbiamo guardando al grafico della scorsa sezione è che, se si potessero combinare i contribuiti di due diodi (uno in una direzione, e uno nell'altra, rispetto a $V_s$), allora si potrebe "riempire" il calo di tensione successivo a $\frac{t_1}{2}$ con un contributo in tensione dato dal diodo invertito.
 
 Per formalizzare quello che si è detto, introduciamo un componente detto \textbf{trasformatore}, dal simbolo:
@@ -300,7 +300,7 @@ Il risultato sulla forma d'onda è che otteniamo un valore non rettificato in \t
 Chiamiamo questo tipo di rettifica \textit{full wave rectification}, per distinguerla appunto dalla \textit{single phase rectification} vista in 7.2.1.
 Abbiamo quindi riempito il secondo semiperiodo come ci eravamo prefissi di fare.
 
-\subsubsection{Circuito rettificatore a doppia semionda con filtro RC}
+\subsection{Circuito rettificatore a doppia semionda con filtro RC}
 Concludiamo reintroducendo il condensatore $C$ per "stabilizzare" in qualche modo il voltaggio. Non facciamo il caso con solo $C$, in quanto sarebbe banale ed uguale al caso senza doppia semionda, e passiamo direttamente al filtro RC: \begin{center}
 \begin{circuitikz}
 	\draw (-3, 1) to[american voltage source, l=$V_s$] (-3, -1)
@@ -338,7 +338,7 @@ Questo ci permetterà di ridurre al minimo l'effetto del ripple voltage, portand
 	\includegraphics[scale=0.3]{../images/rect_transcap.png}
 \end{center}
 
-\subsubsection{Rettificatore a ponte di Graetz}
+\subsection{Rettificatore a ponte di Graetz}
 Una soluzione alternativa alla doppia semionda col trasformatore (che chiamiamo anche \textit{presa centrale}) è data dall'utilizzo di una particolare configurazione di 4 diodi, detta ponte di \textit{Graetz}. Questo ci permetterà di risparmiare sul trasformatore a presa centrale (ingombrante e costoso).
 
 Il circuito del ponte di Graetz è il seguente:
@@ -436,7 +436,7 @@ Il risultato è quindi che abbiamo ottenuto un circuito esattamente uguale al re
 \end{circuitikz}
 \end{center}
 
-\subsubsection{Rettificatore a ponte di Graetz con filtro RC}
+\subsection{Rettificatore a ponte di Graetz con filtro RC}
 Come per il circuito a rettificatore a trasformatore a presa centrale, il ponte di Graetz può essere migliorato introducendo uno stage di filtraggio RC che stabilizzi la tensione $V_u$ in uscita:
 \begin{center}
 \begin{circuitikz}
@@ -461,7 +461,7 @@ Come per il circuito a rettificatore a trasformatore a presa centrale, il ponte 
 
 Anche in questo caso, questa soluzione ci permetterà di ridurre al minimo l'effetto del ripple voltage, portando ad una forma d'onda che è molto vicina all'essere costante. Chiaramente, all'aumentare di $C$ "appiattiamo" sempre più la forma d'onda. Il grafico della forma d'onda sarà lo stesso di 8.0.4.
 
-\subsubsection{Confronto fra tra presa centrale e ponte di Graetz}
+\subsection{Confronto fra tra presa centrale e ponte di Graetz}
 Confrontiamo le due soluzioni che abbiamo dato per la rettifica del segnale.
 
 \begin{itemize}
@@ -508,7 +508,7 @@ La strategia per risolvere questo problema sarà data in due passaggi:
 	\item \textbf{Regolazione}: Introduciamo un diodo \textit{Zener} (visti in 6.1.1) per rendere l’uscita immune alle variazioni del carico. Avevamo già introdotto, infatti, come un diodo di Zener in regime di breakdown può comportarsi come un generatore di tensione costante.
 \end{enumerate}
 
-\subsubsection{Rettificatore con diodo Zener}
+\subsection{Rettificatore con diodo Zener}
 Vediamo nello specifico come i diodi \textbf{Zener} vengono usati nei rettificatori. Abbiamo che questi sono, di base, componenti con le seguenti caratteristiche:
 \begin{itemize}
     \item A differenza dei diodi comuni, il diodo Zener è progettato per lavorare stabilmente nella regione di rottura (\textit{breakdown}) senza danneggiarsi;

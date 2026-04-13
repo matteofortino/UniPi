@@ -1,13 +1,23 @@
 \contentsline {section}{\numberline {1}lezione del 17-03-26}{2}{section.1}%
-\contentsline {subsubsection}{\numberline {1.0.1}Circuito rettificatore con condensatore}{2}{subsubsection.1.0.1}%
-\contentsline {subsubsection}{\numberline {1.0.2}Circuito rettificatore con filtro RC}{3}{subsubsection.1.0.2}%
-\contentsline {subsubsection}{\numberline {1.0.3}Circuito rettificatore a doppia semionda}{4}{subsubsection.1.0.3}%
-\contentsline {subsubsection}{\numberline {1.0.4}Circuito rettificatore a doppia semionda con filtro RC}{6}{subsubsection.1.0.4}%
-\contentsline {subsubsection}{\numberline {1.0.5}Rettificatore a ponte di Graetz}{7}{subsubsection.1.0.5}%
-\contentsline {subsubsection}{\numberline {1.0.6}Rettificatore a ponte di Graetz con filtro RC}{9}{subsubsection.1.0.6}%
-\contentsline {subsubsection}{\numberline {1.0.7}Confronto fra tra presa centrale e ponte di Graetz}{9}{subsubsection.1.0.7}%
-\contentsline {subsubsection}{\numberline {1.0.8}Rettificatore con diodo Zener}{10}{subsubsection.1.0.8}%
+\contentsline {subsection}{\numberline {1.1}Circuito rettificatore con condensatore}{2}{subsection.1.1}%
+\contentsline {subsection}{\numberline {1.2}Circuito rettificatore con filtro RC}{3}{subsection.1.2}%
+\contentsline {subsection}{\numberline {1.3}Circuito rettificatore a doppia semionda}{4}{subsection.1.3}%
+\contentsline {subsection}{\numberline {1.4}Circuito rettificatore a doppia semionda con filtro RC}{6}{subsection.1.4}%
+\contentsline {subsection}{\numberline {1.5}Rettificatore a ponte di Graetz}{7}{subsection.1.5}%
+\contentsline {subsection}{\numberline {1.6}Rettificatore a ponte di Graetz con filtro RC}{9}{subsection.1.6}%
+\contentsline {subsection}{\numberline {1.7}Confronto fra tra presa centrale e ponte di Graetz}{9}{subsection.1.7}%
+\contentsline {subsection}{\numberline {1.8}Rettificatore con diodo Zener}{10}{subsection.1.8}%
 \contentsline {section}{\numberline {2}lezione del 20-03-26}{11}{section.2}%
 \contentsline {subsection}{\numberline {2.1}Diodio Zener: Operare nel Breakdown}{11}{subsection.2.1}%
 \contentsline {subsubsection}{\numberline {2.1.1}Regolatore di tensione con diodo zener}{12}{subsubsection.2.1.1}%
 \contentsline {subsection}{\numberline {2.2}Modello del diodio per piccolo segnali}{13}{subsection.2.2}%
+\contentsline {section}{\numberline {3}lezione del 24-03-26}{14}{section.3}%
+\contentsline {subsection}{\numberline {3.1}Il transistore bipolare BJT}{14}{subsection.3.1}%
+\contentsline {subsubsection}{\numberline {3.1.1}Guadagno di tensione e corrente}{14}{subsubsection.3.1.1}%
+\contentsline {subsubsection}{\numberline {3.1.2}Guadagno di potenza}{15}{subsubsection.3.1.2}%
+\contentsline {subsection}{\numberline {3.2}Trattazione fisica del transitore bipolare}{16}{subsection.3.2}%
+\contentsline {section}{\numberline {4}lezione del 27-03-26}{16}{section.4}%
+\contentsline {subsection}{\numberline {4.1}Polarizzazione del transitore BJT}{16}{subsection.4.1}%
+\contentsline {subsubsection}{\numberline {4.1.1}Modello grafico}{17}{subsubsection.4.1.1}%
+\contentsline {subsubsection}{\numberline {4.1.2}Modello analitico}{18}{subsubsection.4.1.2}%
+\contentsline {subsection}{\numberline {4.2}Risoluzione di circuti con il transitore bipolare}{19}{subsection.4.2}%

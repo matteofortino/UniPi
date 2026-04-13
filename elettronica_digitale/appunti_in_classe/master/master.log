@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex 2026.3.17)  20 MAR 2026 17:27
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex 2026.3.17)  2 APR 2026 18:23
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1082,77 +1082,72 @@ Package pgfplots notification 'compat/show suggested version=true': document ha
 s been generated with the most recent feature set (\pgfplotsset{compat=1.18}).
 
 \c@lstlisting=\count376
-(./master.toc
-LaTeX Font Info:    Trying to load font information for OT1+lmr on input line 2
-.
- (/usr/local/texlive/2026/texmf-dist/tex/latex/lm/ot1lmr.fd
-File: ot1lmr.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
-)
-LaTeX Font Info:    Trying to load font information for OML+lmm on input line 2
-.
-
-(/usr/local/texlive/2026/texmf-dist/tex/latex/lm/omllmm.fd
-File: omllmm.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
-)
-LaTeX Font Info:    Trying to load font information for OMS+lmsy on input line 
-2.
-
-(/usr/local/texlive/2026/texmf-dist/tex/latex/lm/omslmsy.fd
-File: omslmsy.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
-)
-LaTeX Font Info:    Trying to load font information for OMX+lmex on input line 
-2.
-
-(/usr/local/texlive/2026/texmf-dist/tex/latex/lm/omxlmex.fd
-File: omxlmex.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
-)
-LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <10.95> on input line 2.
-LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <8> on input line 2.
-LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <6> on input line 2.
-LaTeX Font Info:    Trying to load font information for U+msa on input line 2.
-
-(/usr/local/texlive/2026/texmf-dist/tex/latex/amsfonts/umsa.fd
-File: umsa.fd 2013/01/14 v3.01 AMS symbols A
-)
-LaTeX Font Info:    Trying to load font information for U+msb on input line 2.
-
-(/usr/local/texlive/2026/texmf-dist/tex/latex/amsfonts/umsb.fd
-File: umsb.fd 2013/01/14 v3.01 AMS symbols B
-))
+(./master.toc)
 \tf@toc=\write5
 \openout5 = `master.toc'.
 
  [1
 
 {/usr/local/texlive/2026/texmf-var/fonts/map/pdftex/updmap/pdftex.map}{/usr/loc
-al/texlive/2026/texmf-dist/fonts/enc/dvips/lm/lm-ec.enc}] (../2026-03-17/body.t
-ex
+al/texlive/2026/texmf-dist/fonts/enc/dvips/lm/lm-ec.enc}]
+(../2026-03-17/body.tex
+LaTeX Font Info:    Trying to load font information for OT1+lmr on input line 4
+.
 
-Package hyperref Warning: Difference (2) between bookmark levels is greater 
-(hyperref)                than one, level fixed on input line 8.
+(/usr/local/texlive/2026/texmf-dist/tex/latex/lm/ot1lmr.fd
+File: ot1lmr.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
+)
+LaTeX Font Info:    Trying to load font information for OML+lmm on input line 4
+.
 
-<../images/rect_cap.png, id=81, 1204.5pt x 368.37625pt>
+(/usr/local/texlive/2026/texmf-dist/tex/latex/lm/omllmm.fd
+File: omllmm.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
+)
+LaTeX Font Info:    Trying to load font information for OMS+lmsy on input line 
+4.
+
+(/usr/local/texlive/2026/texmf-dist/tex/latex/lm/omslmsy.fd
+File: omslmsy.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
+)
+LaTeX Font Info:    Trying to load font information for OMX+lmex on input line 
+4.
+
+(/usr/local/texlive/2026/texmf-dist/tex/latex/lm/omxlmex.fd
+File: omxlmex.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
+)
+LaTeX Font Info:    External font `lmex10' loaded for size
+(Font)              <10.95> on input line 4.
+LaTeX Font Info:    External font `lmex10' loaded for size
+(Font)              <8> on input line 4.
+LaTeX Font Info:    External font `lmex10' loaded for size
+(Font)              <6> on input line 4.
+LaTeX Font Info:    Trying to load font information for U+msa on input line 4.
+
+(/usr/local/texlive/2026/texmf-dist/tex/latex/amsfonts/umsa.fd
+File: umsa.fd 2013/01/14 v3.01 AMS symbols A
+)
+LaTeX Font Info:    Trying to load font information for U+msb on input line 4.
+
+(/usr/local/texlive/2026/texmf-dist/tex/latex/amsfonts/umsb.fd
+File: umsb.fd 2013/01/14 v3.01 AMS symbols B
+)
+<../images/rect_cap.png, id=15, 1204.5pt x 368.37625pt>
 File: ../images/rect_cap.png Graphic file (type png)
 <use ../images/rect_cap.png>
 Package pdftex.def Info: ../images/rect_cap.png  used on input line 27.
 (pdftex.def)             Requested size: 361.35278pt x 110.51372pt.
-[2{/usr/local/texlive/2026/texmf-dist/fonts/enc/dvips/lm/lm-mathit.enc}{/usr/lo
-cal/texlive/2026/texmf-dist/fonts/enc/dvips/lm/lm-mathsy.enc}{/usr/local/texliv
-e/2026/texmf-dist/fonts/enc/dvips/lm/lm-rm.enc} <../images/rect_cap.png>]
-<../images/rect_rc.png, id=97, 1204.5pt x 368.37625pt>
+ [2{/usr/local/texlive/2026/texmf-dist/fonts/enc/dvips/lm/lm-mathit.enc}{/usr/l
+ocal/texlive/2026/texmf-dist/fonts/enc/dvips/lm/lm-mathsy.enc}{/usr/local/texli
+ve/2026/texmf-dist/fonts/enc/dvips/lm/lm-rm.enc} <../images/rect_cap.png>]
+<../images/rect_rc.png, id=33, 1204.5pt x 368.37625pt>
 File: ../images/rect_rc.png Graphic file (type png)
 <use ../images/rect_rc.png>
 Package pdftex.def Info: ../images/rect_rc.png  used on input line 67.
 (pdftex.def)             Requested size: 361.35278pt x 110.51372pt.
-
-[3 <../images/rect_rc.png>]
+ [3 <../images/rect_rc.png>]
 LaTeX Font Info:    Trying to load font information for TS1+lmr on input line 1
 09.
-
-(/usr/local/texlive/2026/texmf-dist/tex/latex/lm/ts1lmr.fd
+ (/usr/local/texlive/2026/texmf-dist/tex/latex/lm/ts1lmr.fd
 File: ts1lmr.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
 ) [4{/usr/local/texlive/2026/texmf-dist/fonts/enc/dvips/lm/lm-ts1.enc}]
 LaTeX Font Info:    Trying to load font information for T1+lmss on input line 1
@@ -1161,19 +1156,19 @@ LaTeX Font Info:    Trying to load font information for T1+lmss on input line 1
 (/usr/local/texlive/2026/texmf-dist/tex/latex/lm/t1lmss.fd
 File: t1lmss.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
 ) [5]
-<../images/rect_trans.png, id=116, 1204.5pt x 368.37625pt>
+<../images/rect_trans.png, id=55, 1204.5pt x 368.37625pt>
 File: ../images/rect_trans.png Graphic file (type png)
 <use ../images/rect_trans.png>
 Package pdftex.def Info: ../images/rect_trans.png  used on input line 206.
 (pdftex.def)             Requested size: 361.35278pt x 110.51372pt.
  [6 <../images/rect_trans.png>]
-<../images/rect_transcap.png, id=122, 1204.5pt x 368.37625pt>
+<../images/rect_transcap.png, id=62, 1204.5pt x 368.37625pt>
 File: ../images/rect_transcap.png Graphic file (type png)
 <use ../images/rect_transcap.png>
 Package pdftex.def Info: ../images/rect_transcap.png  used on input line 246.
 (pdftex.def)             Requested size: 361.35278pt x 110.51372pt.
  [7 <../images/rect_transcap.png>] [8] [9] [10]
-<../images/zener.png, id=143, 1204.5pt x 803.0pt>
+<../images/zener.png, id=87, 1204.5pt x 803.0pt>
 File: ../images/zener.png Graphic file (type png)
 <use ../images/zener.png>
 Package pdftex.def Info: ../images/zener.png  used on input line 442.
@@ -1187,38 +1182,91 @@ LaTeX Font Info:    External font `lmex10' loaded for size
 LaTeX Font Info:    External font `lmex10' loaded for size
 (Font)              <7> on input line 27.
  [11 <../images/zener.png>]
-<../images/regolatore_di_tensione_diodo_zener.png, id=152, 1183.42125pt x 305.1
-4pt>
+<../images/regolatore_di_tensione_diodo_zener.png, id=98, 1183.42125pt x 305.14
+pt>
 File: ../images/regolatore_di_tensione_diodo_zener.png Graphic file (type png)
 <use ../images/regolatore_di_tensione_diodo_zener.png>
 Package pdftex.def Info: ../images/regolatore_di_tensione_diodo_zener.png  used
  on input line 45.
 (pdftex.def)             Requested size: 414.20364pt x 106.80058pt.
  [12 <../images/regolatore_di_tensione_diodo_zener.png>]
-<../images/grafico_diodo_piccoli_segnali.png, id=161, 686.565pt x 645.41125pt>
+<../images/grafico_diodo_piccoli_segnali.png, id=108, 686.565pt x 645.41125pt>
 File: ../images/grafico_diodo_piccoli_segnali.png Graphic file (type png)
 <use ../images/grafico_diodo_piccoli_segnali.png>
 Package pdftex.def Info: ../images/grafico_diodo_piccoli_segnali.png  used on i
 nput line 73.
 (pdftex.def)             Requested size: 240.30135pt x 225.89732pt.
  [13{/usr/local/texlive/2026/texmf-dist/fonts/enc/dvips/lm/lm-mathex.enc} <../i
-mages/grafico_diodo_piccoli_segnali.png>]) [14]
-(./master.aux)
+mages/grafico_diodo_piccoli_segnali.png>])
+(../2026-03-24/body.tex
+\absvshift=\dimen348
+\absvshift=\dimen349
+ [14] [15]
+<../images/transitore_bipolare.png, id=129, 690.58pt x 188.705pt>
+File: ../images/transitore_bipolare.png Graphic file (type png)
+<use ../images/transitore_bipolare.png>
+Package pdftex.def Info: ../images/transitore_bipolare.png  used on input line 
+108.
+(pdftex.def)             Requested size: 310.75812pt x 84.91646pt.
+) (../2026-03-27/body.tex
+<../images/polarizzazione_transitore_bjt.png, id=130, 361.35pt x 211.79124pt>
+File: ../images/polarizzazione_transitore_bjt.png Graphic file (type png)
+<use ../images/polarizzazione_transitore_bjt.png>
+Package pdftex.def Info: ../images/polarizzazione_transitore_bjt.png  used on i
+nput line 10.
+(pdftex.def)             Requested size: 234.87471pt x 137.66267pt.
+ [16 <../images/transitore_bipolare.png> <../images/polarizzazione_transitore_b
+jt.png>]
+<../images/grafico_polarizzzazione_transitore_bjt_ingresso.png, id=140, 376.406
+25pt x 310.15875pt>
+File: ../images/grafico_polarizzzazione_transitore_bjt_ingresso.png Graphic fil
+e (type png)
+<use ../images/grafico_polarizzzazione_transitore_bjt_ingresso.png>
+Package pdftex.def Info: ../images/grafico_polarizzzazione_transitore_bjt_ingre
+sso.png  used on input line 40.
+(pdftex.def)             Requested size: 282.30399pt x 232.61848pt.
+<../images/grafico_polarizzzazione_transitore_bjt_uscita.png, id=141, 440.64626
+pt x 427.5975pt>
+File: ../images/grafico_polarizzzazione_transitore_bjt_uscita.png Graphic file 
+(type png)
+<use ../images/grafico_polarizzzazione_transitore_bjt_uscita.png>
+Package pdftex.def Info: ../images/grafico_polarizzzazione_transitore_bjt_uscit
+a.png  used on input line 46.
+(pdftex.def)             Requested size: 242.35619pt x 235.17935pt.
+ [17 <../images/grafico_polarizzzazione_transitore_bjt_ingresso.png>] [18 <../i
+mages/grafico_polarizzzazione_transitore_bjt_uscita.png>]
+<../images/tabella_ipotesi_trasitore_bjt.png, id=154, 640.3925pt x 359.3425pt>
+File: ../images/tabella_ipotesi_trasitore_bjt.png Graphic file (type png)
+<use ../images/tabella_ipotesi_trasitore_bjt.png>
+Package pdftex.def Info: ../images/tabella_ipotesi_trasitore_bjt.png  used on i
+nput line 90.
+(pdftex.def)             Requested size: 352.21696pt x 197.63898pt.
+) [19 <../images/tabella_ipotesi_trasitore_bjt.png>] (./master.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2026-01-19>
  ***********
-Package rerunfilecheck Info: File `master.out' has not changed.
-(rerunfilecheck)             Checksum: 4103C752D756D586A49F4562F481CF1F;3386.
+
+
+LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
+
+
+Package rerunfilecheck Warning: File `master.out' has changed.
+(rerunfilecheck)                Rerun to get outlines right
+(rerunfilecheck)                or use package `bookmark'.
+
+Package rerunfilecheck Info: Checksums for `master.out':
+(rerunfilecheck)             Before: D41D8CD98F00B204E9800998ECF8427E;0
+(rerunfilecheck)             After:  FD444BC62B8F2375FCB92223B70C1EE8;5317.
  ) 
 Here is how much of TeX's memory you used:
- 56244 strings out of 467525
- 1448953 string characters out of 5418982
- 2328638 words of memory out of 5000000
- 84474 multiletter control sequences out of 15000+600000
+ 56564 strings out of 467525
+ 1459598 string characters out of 5418982
+ 2327638 words of memory out of 5000000
+ 84773 multiletter control sequences out of 15000+600000
  690463 words of font info for 86 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 84i,10n,94p,723b,856s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 84i,10n,94p,723b,899s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/local/texlive/2026/texmf-dist/fonts/type1/public/lm/lmbx10.pfb></usr/lo
 cal/texlive/2026/texmf-dist/fonts/type1/public/lm/lmbx12.pfb></usr/local/texliv
 e/2026/texmf-dist/fonts/type1/public/lm/lmex10.pfb></usr/local/texlive/2026/tex
@@ -1233,10 +1281,10 @@ onts/type1/public/lm/lmri10.pfb></usr/local/texlive/2026/texmf-dist/fonts/type1
 /public/lm/lmssbx10.pfb></usr/local/texlive/2026/texmf-dist/fonts/type1/public/
 lm/lmsy10.pfb></usr/local/texlive/2026/texmf-dist/fonts/type1/public/lm/lmsy6.p
 fb></usr/local/texlive/2026/texmf-dist/fonts/type1/public/lm/lmsy8.pfb>
-Output written on master.pdf (14 pages, 702441 bytes).
+Output written on master.pdf (19 pages, 1026288 bytes).
 PDF statistics:
- 262 PDF objects out of 1000 (max. 8388607)
- 195 compressed objects within 2 object streams
- 36 named destinations out of 1000 (max. 500000)
- 152 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 255 PDF objects out of 1000 (max. 8388607)
+ 173 compressed objects within 2 object streams
+ 51 named destinations out of 1000 (max. 500000)
+ 73 words of extra memory for PDF output out of 10000 (max. 10000000)
 
