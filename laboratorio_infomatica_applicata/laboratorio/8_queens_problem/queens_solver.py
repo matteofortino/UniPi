@@ -1,523 +1,221 @@
 """
-N-Queens Problem Solver - Object Oriented Implementation
+8-Queens Problem Solver
 
-This module implements an efficient solution to the classic N-queens problem
-using Object-Oriented Programming and advanced backtracking optimizations.
-
-Key optimizations:
-    - Bitmask operations for O(1) conflict checking (columns, diagonals)
-    - Minimum Remaining Values (MRV) heuristic for faster pruning
-    - Iterative deepening via generator-based search
-    - Pre-allocated data structures to minimize memory allocation
-
-Performance characteristics:
-    - Works efficiently for boards up to 64x64 and beyond
-    - O(n!) worst case but heavily pruned in practice
-    - O(n) memory usage
+This module implements functions to solve the classic 8-queens problem.
 """
+class QueenSolver:
+    def __init__(self, n=8): 
+        self.board = [-1]*n
+        self.n = n
 
-from __future__ import annotations
-from typing import Optional, Iterator
+    def is_safe(self, row, col):
+        for prev_row, prev_col in enumerate(self.board): 
+            if prev_col == -1:
+                continue
+            if prev_col == col: 
+                return False
+            if abs(prev_row - row) == abs(prev_col - col): 
+                return False 
+        return True
+    def solve_queen(self):
+        if self.n == 1:
+            return [0]
+        if self.n in (2,3):
+            return None
+        
+        cols  = [False] * self.n
+        diag1 = [False] * (2 * self.n)  # row - col, offset di n per evitare indici negativi
+        diag2 = [False] * (2 * self.n)  # row + col
 
+        def count_free(row):
+            '''
+                Parametri: 
+                    - row (int): numero della righa da processare
+                Ritorno: 
+                    - numero di colonne libere in quella righa
+            '''
+            return sum(
+                1 for col in range(self.n)
+                if not cols[col] and not diag1[row-col+self.n] and not diag2[row+col]
+            )
+        def solve(remaining_rows):
+                if not remaining_rows:
+                    return True
 
-class QueensBoard:
-    """
-    Represents the state of an N-queens board using bitmask optimization.
+                # scegli la riga con meno colonne libere
+                row = min(remaining_rows, key=count_free)
+                remaining_rows.remove(row)
+                for col in range(self.n):
+                    d1 = row - col + self.n
+                    d2 = row + col
+                    if not cols[col] and not diag1[d1] and not diag2[d2]:
+                        self.board[row] = col
+                        cols[col] = diag1[d1] = diag2[d2] = True
+                        if solve(remaining_rows):
+                            return True
+                        cols[col] = diag1[d1] = diag2[d2] = False
+                        self.board[row] = -1
+                # se non trova una soluzione re-inserisco la riga nel set
+                remaining_rows.add(row)
+                return False
 
-    The board state is encoded using three integer bitmasks:
-        - _cols:       columns already occupied by a queen
-        - _diag_main:  occupied main diagonals (top-left to bottom-right, \\)
-        - _diag_anti:  occupied anti-diagonals (top-right to bottom-left, /)
+        return self.board if solve(set(range(self.n))) else None
+    
+    def find_all_solutions(self):
+        '''
+            Fa la stessa cosa di queen_solve ma
+            la ricorsione non viene fermata
+        '''
 
-    Each bitmask uses one bit per column/diagonal, enabling O(1) conflict
-    detection via bitwise AND.  Placing or removing a queen is also O(1).
+        all_solution = []
+        self.board = [-1] * self.n
+        cols = [False] * self.n
+        diag1 = [False] * (2 * self.n)
+        diag2 = [False] * (2 * self.n)
 
-    Attributes:
-        n (int): Board size (number of rows/columns).
-    """
+        def count_free(row):
+            return sum(
+                1 for col in range(self.n) if not cols[col] and not diag1[row-col+self.n] and not diag2[row+col]
+            )
 
-    __slots__ = ("n", "_all_cols", "_cols", "_diag_main", "_diag_anti", "_placement")
+        def solve(remaining_rows): 
+            if not remaining_rows:
+                all_solution.append(self.board[:])
+                return
+            row = min(remaining_rows, key=count_free)
+            remaining_rows.remove(row)
+            for col in range(self.n):
+                d1 = row - col + self.n
+                d2 = row + col
+                if not cols[col] and not diag1[d1] and not diag2[d2]: 
+                    self.board[row] = col
+                    cols[col] = diag1[d1] = diag2[d2] = True
+                    solve(remaining_rows)
+                    cols[col] = diag1[d1] = diag2[d2] = False 
+                    self.board[row] = -1
+            remaining_rows.add(row)
+        solve(set(range(self.n)))
+        return all_solution
 
-    def __init__(self, n: int) -> None:
-        """
-        Initialize an empty N×N board.
+    def board_to_string(self):
 
-        Parameters:
-            n (int): The size of the board and the number of queens to place.
-        """
-        if n < 1:
-            raise ValueError(f"Board size must be at least 1, got {n}")
-        self.n: int = n
-        # Mask with 1s in the n least-significant positions
-        self._all_cols: int = (1 << n) - 1
-        self._cols: int = 0
-        self._diag_main: int = 0   # shifts left  when moving down a row
-        self._diag_anti: int = 0   # shifts right when moving down a row
-        # _placement[row] = column index of the queen placed in that row
-        self._placement: list[int] = [-1] * n
-
-    # ------------------------------------------------------------------
-    # Public query helpers
-    # ------------------------------------------------------------------
-
-    def is_safe(self, row: int, col: int) -> bool:
-        """
-        Check whether placing a queen at (row, col) is conflict-free.
-
-        Uses the current bitmask state; the *row* parameter is only used to
-        validate the column index range.
-
-        Parameters:
-            row (int): Target row (used for bounds checking).
-            col (int): Target column (0-indexed).
-
-        Returns:
-            bool: True if no existing queen threatens (row, col).
-        """
-        bit = 1 << col
-        return not (self._cols & bit or self._diag_main & bit or self._diag_anti & bit)
-
-    def available_columns(self) -> int:
-        """
-        Return a bitmask of columns safe to use for the *next* row.
-
-        The lowest set bit in the result corresponds to the leftmost safe column.
-
-        Returns:
-            int: Bitmask of safe column positions.
-        """
-        occupied = self._cols | self._diag_main | self._diag_anti
-        return self._all_cols & ~occupied
-
-    # ------------------------------------------------------------------
-    # Mutation helpers (called by the solver, not part of the public API)
-    # ------------------------------------------------------------------
-
-    def _place(self, col: int) -> None:
-        """
-        Register a queen in the *next available* row at column *col*.
-
-        Updates all three conflict bitmasks and records the placement.
-
-        Parameters:
-            col (int): Column index (0-indexed) to place the queen.
-        """
-        row = self._find_next_row()
-        bit = 1 << col
-        self._cols ^= bit
-        self._diag_main = ((self._diag_main | bit) << 1) & self._all_cols
-        self._diag_anti = ((self._diag_anti | bit) >> 1) & self._all_cols
-        self._placement[row] = col
-
-    def _remove(self, col: int) -> None:
-        """
-        Undo the queen placement at column *col* in the last occupied row.
-
-        Parameters:
-            col (int): Column index of the queen to remove.
-        """
-        row = self._find_last_row()
-        bit = 1 << col
-        self._cols ^= bit
-        # Reverse the shift applied during _place
-        self._diag_main = ((self._diag_main >> 1) | bit) & self._all_cols
-        self._diag_anti = ((self._diag_anti << 1) | bit) & self._all_cols
-        self._placement[row] = -1
-
-    def _find_next_row(self) -> int:
-        """Return the index of the first unoccupied row."""
-        for i, col in enumerate(self._placement):
-            if col == -1:
-                return i
-        return self.n  # fully placed (should not happen during search)
-
-    def _find_last_row(self) -> int:
-        """Return the index of the last occupied row."""
-        for i in range(self.n - 1, -1, -1):
-            if self._placement[i] != -1:
-                return i
-        return -1
-
-    def to_list(self) -> list[int]:
-        """
-        Return a snapshot of the current placement as a plain list.
-
-        Returns:
-            list[int]: A copy of the internal placement array.
-        """
-        return list(self._placement)
-
-    def to_string(self) -> str:
-        """
-        Render the board as a multi-line ASCII string.
-
-        Each row is a string of '.' and 'Q' characters terminated by '\\n'.
-
-        Returns:
-            str: Human-readable board representation.
-        """
-        rows: list[str] = []
-        for col in self._placement:
-            if col == -1:
-                rows.append("." * self.n + "\n")
-            else:
-                rows.append("." * col + "Q" + "." * (self.n - col - 1) + "\n")
+        self.n = len(self.board)
+        rows = []
+        for col in self.board: 
+            rows.append("." * col + "Q" + "." * (self.n - col - 1) + "\n")
         return "".join(rows)
 
-    def __repr__(self) -> str:  # pragma: no cover
-        return f"QueensBoard(n={self.n}, queens_placed={self._find_next_row()})"
-
-
-class QueensSolver:
-    """
-    Solver for the N-queens problem using optimized backtracking.
-
-    The algorithm iterates over rows top-to-bottom and, at each row, uses
-    bitmask operations to enumerate only the *safe* columns in O(1) per
-    candidate (no linear scan over all columns).  This gives a roughly
-    3-5× speedup over array-based conflict checks for large *n*.
-
-    Usage::
-
-        solver = QueensSolver(8)
-        solution = solver.solve()           # first solution or None
-        all_sols = solver.find_all()        # list of all solutions
-        count    = solver.count()           # number of solutions
-        print(solver.is_valid([1,3,0,2]))   # validate an external list
-
-    Attributes:
-        n (int): Board size.
-    """
-
-    def __init__(self, n: int) -> None:
-        """
-        Create a solver for an n×n board.
-
-        Parameters:
-            n (int): Board size (≥1).
-        """
-        self.n: int = n
-
-    # ------------------------------------------------------------------
-    # Public interface (matches the module-level function signatures)
-    # ------------------------------------------------------------------
-
-    def solve(self) -> Optional[list[int]]:
-        """
-        Find *one* solution to the n-queens problem.
-
-        For n >= 20 uses a deterministic O(n) construction (modular arithmetic
-        pattern) for near-instant results, then falls back to bitmask
-        backtracking for smaller boards.
-
-        Returns:
-            list[int] or None: Column positions indexed by row, or None if
-            no solution exists.
-        """
-        fast = self._construct_solution()
-        if fast is not None:
-            return fast
-        try:
-            return next(self._search())
-        except StopIteration:
-            return None
-
-    # ------------------------------------------------------------------
-    # Deterministic O(n) constructor
-    # ------------------------------------------------------------------
-
-    def _construct_solution(self) -> Optional[list[int]]:
-        """
-        Build one valid solution in O(n) using explicit construction rules.
-
-        Only invoked for n >= 20. Returns None for n=2,3 (no solutions) and
-        for n < 20 (handled by fast backtracking instead).
-
-        The algorithm uses a known modular arithmetic construction that works
-        for all n >= 4 with no conflicts.
-
-        Returns:
-            list[int] or None: A valid placement, or None if not applicable.
-        """
+    def count_solution(self):
+        return len(self.find_all_solutions())
+    
+    def is_valid_solution(self):
+        copied_board = self.board.copy()
         n = self.n
-        if n == 1:
-            return [0]
-        if n in (2, 3):
-            return None
-        if n < 20:
-            return None  # backtracking is plenty fast for small n
-        return _construct_n_queens(n)
-
-    def find_all(self) -> list[list[int]]:
-        """
-        Find *all* solutions to the n-queens problem.
-
-        Returns:
-            list[list[int]]: Every distinct solution.
-        """
-        return list(self._search())
-
-    def count(self) -> int:
-        """
-        Count the number of solutions without storing them.
-
-        Slightly faster than ``len(find_all())`` because it avoids list copies.
-
-        Returns:
-            int: Total number of solutions.
-        """
-        total = 0
-        for _ in self._search():
-            total += 1
-        return total
-
-    def is_valid(self, board: list[int]) -> bool:
-        """
-        Verify whether *board* represents a valid n-queens solution.
-
-        Checks:
-            - Length equals n
-            - All values are in [0, n-1]
-            - No two queens share a column
-            - No two queens share a diagonal
-
-        Parameters:
-            board (list[int]): Candidate solution to validate.
-
-        Returns:
-            bool: True if the board is a valid solution.
-        """
-        n = self.n
-        if len(board) != n:
-            return False
-        if any(col < 0 or col >= n for col in board):
-            return False
-        seen_cols: set[int] = set()
-        seen_main: set[int] = set()  # row - col  (constant on \ diagonals)
-        seen_anti: set[int] = set()  # row + col  (constant on / diagonals)
-        for row, col in enumerate(board):
-            main = row - col
-            anti = row + col
-            if col in seen_cols or main in seen_main or anti in seen_anti:
+        for row, col in enumerate(copied_board):
+            if col < 0 or col >= n:
                 return False
-            seen_cols.add(col)
-            seen_main.add(main)
-            seen_anti.add(anti)
+            for prev_row in range(row):
+                prev_col = copied_board[prev_row]
+                if prev_col == col or abs(prev_row - row) == abs(prev_col - col):
+                    return False
         return True
 
-    # ------------------------------------------------------------------
-    # Core search generator
-    # ------------------------------------------------------------------
-
-    def _search(self) -> Iterator[list[int]]:
-        """
-        Yield every solution via iterative backtracking with bitmask pruning.
-
-        Uses an explicit stack instead of recursion to avoid Python's default
-        recursion limit (~1 000) for large boards and to enable cooperative
-        yielding of results.
-
-        Yields:
-            list[int]: A valid placement array for each solution found.
-        """
-        n = self.n
-        all_cols = (1 << n) - 1
-
-        # State arrays (indexed by row):
-        #   cols[row]       - column bitmask of column-conflicts propagated down
-        #   diag_main[row]  - \ diagonal bitmask propagated down
-        #   diag_anti[row]  - / diagonal bitmask propagated down
-        #   placement[row]  - chosen column for that row (-1 = not yet set)
-        #   candidates[row] - remaining candidate bitmask for that row
-
-        cols       = [0] * (n + 1)
-        diag_main  = [0] * (n + 1)
-        diag_anti  = [0] * (n + 1)
-        placement  = [-1] * n
-        candidates = [0] * n  # remaining bits to try at each row
-
-        row = 0
-        # Initialise candidates for row 0
-        candidates[0] = all_cols & ~(cols[0] | diag_main[0] | diag_anti[0])
-
-        while row >= 0:
-            if row == n:
-                # All queens placed — emit a solution
-                yield list(placement)
-                row -= 1
-                continue
-
-            avail = candidates[row]
-
-            if avail == 0:
-                # No safe column in this row → backtrack
-                placement[row] = -1
-                row -= 1
-                continue
-
-            # Pick the lowest available bit (rightmost safe column)
-            bit = avail & (-avail)
-            col = bit.bit_length() - 1  # convert bit position to column index
-
-            # Remove this candidate from the current row's mask
-            candidates[row] = avail ^ bit
-
-            # Place queen
-            placement[row] = col
-
-            # Propagate constraints to the next row
-            new_cols      = cols[row]      | bit
-            new_diag_main = ((diag_main[row] | bit) << 1) & all_cols
-            new_diag_anti = ((diag_anti[row] | bit) >> 1) & all_cols
-
-            row += 1
-            cols[row]      = new_cols
-            diag_main[row] = new_diag_main
-            diag_anti[row] = new_diag_anti
-            if row < n:
-                candidates[row] = all_cols & ~(new_cols | new_diag_main | new_diag_anti)
 
 
-# =============================================================================
-# Deterministic O(n) construction helper
-# =============================================================================
+def is_safe(board, row, col):
 
-def _construct_n_queens(n: int) -> list[int]:
     """
-    Construct one valid n-queens solution in O(n) using the even/odd split method.
-
-    Based on the construction described by Hoffman, Loessi & Moore (1969).
-    Works for all n >= 1 (except n=2,3 which have no solution).
-
-    The board columns are numbered 1..n. Two arithmetic sequences are formed
-    (evens: 2,4,...  and odds: 1,3,...) and concatenated with minor adjustments
-    depending on n mod 6:
-
-        n % 6 == 2:  odds tail becomes [3, 1, 7, 9, ..., n-1, 5]
-        n % 6 == 3:  evens tail becomes [..., n, 2]; odds becomes [5,7,...,n-1,1,3]
-        otherwise:   no adjustment needed
-
+    Check if a queen can be placed at position (row, col) without being threatened.
+    
+    A queen threatens another queen if they share the same row, column, or diagonal.
+    
     Parameters:
-        n (int): Board size (must be >= 4).
-
+        board (list): A 1D array where board[i] represents the column position 
+                     of the queen in row i
+        row (int): The row to check
+        col (int): The column to check
+    
     Returns:
-        list[int]: 0-indexed column placements, one per row.
+        bool: True if it's safe to place a queen at position (row, col), False otherwise
     """
-    if n == 1:
-        return [0]
+    qs = QueenSolver(len(board))
+    qs.board = board
+    return qs.is_safe(row, col)
 
-    evens = list(range(2, n + 1, 2))
-    odds  = list(range(1, n + 1, 2))
-
-    r = n % 6
-    if r == 2:
-        # Rearrange odd tail: move 1,3,5 to end in order [3,1,...,5]
-        tail_odds = [3, 1] + [x for x in odds if x not in (1, 3, 5)] + [5]
-        seq = evens + tail_odds
-    elif r == 3:
-        # Cycle evens so 2 is last; cycle odds so 1,3 are last
-        new_evens = [x for x in evens if x != 2] + [2]
-        tail_odds = [x for x in odds if x not in (1, 3)] + [1, 3]
-        seq = new_evens + tail_odds
-    else:
-        seq = evens + odds
-
-    return [c - 1 for c in seq]
-
-
-# =============================================================================
-# Module-level functional API
-# (Required by test_queen_solver.py — thin wrappers around QueensSolver)
-# =============================================================================
-
-def is_safe(board: list[int], row: int, col: int) -> bool:
+def solve_queens(n=8):
     """
-    Check if a queen can be placed at position (row, col) without conflict.
-
+    Solve the n-queens problem and return a solution if one exists.
+    
     Parameters:
-        board (list[int]): Queens already placed; board[i] = column of queen in row i.
-        row (int): The row where we want to place the new queen.
-        col (int): The column where we want to place the new queen.
-
+        n (int): The size of the board and number of queens to place
+        
     Returns:
-        bool: True if placing a queen at (row, col) is safe.
+        list or None: A 1D array representing a solution, where solution[i] is the 
+                     column position of the queen in row i, or None if no solution exists
     """
-    for prev_row, prev_col in enumerate(board):
-        # Same column conflict
-        if prev_col == col:
-            return False
-        # Diagonal conflict: |row_diff| == |col_diff|
-        if abs(prev_row - row) == abs(prev_col - col):
-            return False
-    return True
+    qs = QueenSolver(n)
+    return qs.solve_queen()
 
-
-def solve_queens(n: int = 8) -> Optional[list[int]]:
-    """
-    Solve the n-queens problem and return one solution if it exists.
-
-    Parameters:
-        n (int): Board size and number of queens to place.
-
-    Returns:
-        list[int] or None: Column positions indexed by row, or None.
-    """
-    return QueensSolver(n).solve()
-
-
-def find_all_solutions(n: int = 8) -> list[list[int]]:
+def find_all_solutions(n=8):
     """
     Find all solutions to the n-queens problem.
-
+    
     Parameters:
-        n (int): Board size and number of queens to place.
-
+        n (int): The size of the board and number of queens to place
+        
     Returns:
-        list[list[int]]: All valid placements.
+        list: A list of solutions, where each solution is a 1D array where
+              solution[i] is the column position of the queen in row i
     """
-    return QueensSolver(n).find_all()
+    # TODO: Implement this function
+    qs = QueenSolver(n)
+    return qs.find_all_solutions()
+    
 
-
-def board_to_string(board: list[int]) -> str:
+    
+def board_to_string(board):
     """
-    Convert a board configuration to a printable string.
-
+    Convert a board configuration to a string representation.
+    
     Parameters:
-        board (list[int]): board[i] is the column of the queen in row i.
-
+        board (list): A 1D array where board[i] represents the column position 
+                     of the queen in row i
+                     
     Returns:
-        str: String with 'Q' for queens and '.' for empty squares; each row
-             ends with a newline character.
+        str: A string representation of the board with 'Q' for queens and '.' for empty squares
     """
-    n = len(board)
-    rows: list[str] = []
-    for col in board:
-        rows.append("." * col + "Q" + "." * (n - col - 1) + "\n")
-    return "".join(rows)
+    # TODO: Implement this function
+    qs = QueenSolver(len(board))
+    qs.board = board
+    return qs.board_to_string()
 
 
-def count_solutions(n: int = 8) -> int:
+def count_solutions(n=8):
     """
-    Count the total number of solutions to the n-queens problem.
-
+    Count the number of solutions to the n-queens problem.
+    
     Parameters:
-        n (int): Board size and number of queens to place.
-
+        n (int): The size of the board and number of queens to place
+        
     Returns:
-        int: Number of distinct solutions.
+        int: The number of solutions
     """
-    return QueensSolver(n).count()
-
-
-def is_valid_solution(board: list[int]) -> bool:
+    # TODO: Implement this function
+    # Hint: You can reuse find_all_solutions or implement a more efficient version
+    qs = QueenSolver(n)
+    return qs.count_solution()
+def is_valid_solution(board):
     """
-    Verify whether *board* is a valid n-queens solution.
-
+    Check if a board configuration is a valid solution to the n-queens problem.
+    
     Parameters:
-        board (list[int]): Candidate solution where board[i] is the queen's
-                           column in row i.
-
+        board (list): A 1D array where board[i] represents the column position 
+                     of the queen in row i
+                     
     Returns:
-        bool: True if the placement is valid, False otherwise.
+        bool: True if the board is a valid solution, False otherwise
     """
-    return QueensSolver(len(board)).is_valid(board)
+    qs = QueenSolver(len(board))
+    qs.board = board
+    return qs.is_valid_solution()
+
