@@ -1,0 +1,13 @@
+version: "3.9"
+
+services:
+  flask-app:
+    build: .
+    container_name: flask_app
+    ports:
+      - "5001:5000"   # host:container (use 5001 to avoid macOS port conflict)
+    volumes:
+      - .:/app        # optional: live reload if you edit code
+    environment:
+      - FLASK_ENV=development
+    restart: unless-stopped
