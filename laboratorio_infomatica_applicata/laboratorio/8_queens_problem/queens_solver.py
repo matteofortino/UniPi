@@ -43,6 +43,7 @@ class QueenSolver:
                     return True
 
                 # scegli la riga con meno colonne libere
+                # row = min(remaining_rows, key=count_free)
                 row = min(remaining_rows, key=count_free)
                 remaining_rows.remove(row)
                 for col in range(self.n):
@@ -58,9 +59,9 @@ class QueenSolver:
                 # se non trova una soluzione re-inserisco la riga nel set
                 remaining_rows.add(row)
                 return False
-
+        
         return self.board if solve(set(range(self.n))) else None
-    
+
     def find_all_solutions(self):
         '''
             Fa la stessa cosa di queen_solve ma
