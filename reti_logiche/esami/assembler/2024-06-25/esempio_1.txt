@@ -1,6 +1,0 @@
-Inserire n: 
-2
-Inserire matrice: 
-1	2	
-1	1	
-La matrice non è diagonalmente dominante.

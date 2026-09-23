@@ -1,3 +1,0 @@
-.global halt
-halt:
-	hlt
