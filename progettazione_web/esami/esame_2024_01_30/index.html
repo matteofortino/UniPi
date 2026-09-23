@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Esame 30/01/2024</title>
+    <style>
+      .contenitore {
+        display: flex;
+      }
+      .form {
+        display: flex;
+        flex-direction: column;
+        width: fit-content;
+        padding: 20px;
+        background-color: gray;
+        margin-right: 20px;
+      }
+      input {
+        width: 200px;
+        border: 1px solid black;
+        margin-bottom: 10px;
+      }
+      input[name="fine"],
+      input[name="inizio"] {
+        width: 40px;
+      }
+      .button {
+        width: fit-content;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        height: fit-content;
+        padding: 10px;
+      }
+      tr:first-child {
+        border: none;
+        background-color: bisque;
+      }
+      td {
+        width: 30px;
+        height: 30px;
+        border: 1px dashed gray;
+      }
+      .id {
+        border: 1px solid black;
+        background-color: lightblue;
+      }
+      .dialog {
+        border: 3px solid black;
+        border-radius: 16px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        background-color: brown;
+        padding: 20px;
+        position: absolute; /* Per posizionarla correttamente */
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 1000; /* Assicurati sia sopra altri elementi */
+      }
+      .dialog[open] {
+        display: block; /* O 'grid', 'flex' etc. */
+      }
+    </style>
+  </head>
+  <body>
+    <div class="contenitore">
+      <div class="form">
+        <label for="identificatore">Identificatore</label>
+        <input type="number" name="identificatore" class="identificatore" />
+
+        <label for="descrizione">Descrizione</label>
+        <input type="text" name="descrizione" class="descrizione" />
+
+        <label for="inizio">Inizio</label>
+        <input type="number" name="inizio" class="inizio" min="0" max="12" />
+
+        <label for="fine">Fine</label>
+        <input type="number" name="fine" class="fine" min="0" max="12" />
+
+        <button type="button" class="button">Inserisci</button>
+      </div>
+      <table class="tabella"></table>
+
+      <dialog class="dialog">
+        <h2 class="titolo"></h2>
+        <p class="d-descrizione"></p>
+        <button type="button" class="d-button">chiudi</button>
+      </dialog>
+    </div>
+    <script>
+      const identificatore = document.querySelector(".identificatore");
+      const descrizione = document.querySelector(".descrizione");
+      const inizio = document.querySelector(".inizio");
+      const fine = document.querySelector(".fine");
+      const button = document.querySelector(".button");
+      const tabella = document.querySelector(".tabella");
+      const dialog = document.querySelector(".dialog");
+      const titolo = document.querySelector(".titolo");
+      const dialogDescrizione = document.querySelector(".d-descrizione");
+      const dialogButton = document.querySelector(".d-button");
+      let arrayAttivita = [];
+
+      dialogButton.addEventListener("click", () => {
+        dialog.close();
+      });
+
+      function inizializza() {
+        identificatore.value = "";
+        descrizione.value = "";
+        inizio.value = "";
+        fine.value = "";
+      }
+      button.addEventListener("click", controllaInput);
+      function controllaInput() {
+        const regexp = /^\d+(\.\d+)?$/;
+        if (!regexp.test(identificatore.value)) {
+          alert("indentificatore non valido");
+          inizializza();
+          return;
+        }
+        if (!descrizione.value) {
+          alert("descrizione non presente");
+          inizializza();
+          return;
+        }
+
+        if (Number(inizio.value) < 0 || Number(fine.value) < 0) {
+          alert("inizo e fine devono essere maggiori di 0");
+          inizializza();
+          return;
+        }
+        if (Number(inizio.value) > 12 || Number(fine.value) > 12) {
+          alert("inizo e fine devono essere minori di 12");
+          inizializza();
+          return;
+        }
+        if (Number(inizio.value) > Number(fine.value)) {
+          alert("fine prima di inizio");
+          inizializza();
+          return;
+        }
+
+        let attivita = {
+          identificatore: -1,
+          descrizione: "",
+          inizio: -1,
+          fine: -1,
+          madre: -1,
+        };
+        attivita["identificatore"] = Number(identificatore.value);
+        attivita["descrizione"] = descrizione.value;
+        attivita["inizio"] = Number(inizio.value);
+        attivita["fine"] = Number(fine.value);
+        attivita["madre"] = Number(identificatore.value.split(".")[0]);
+
+        let motherPresent = false;
+
+        for (let i = 0; i < arrayAttivita.length; i++) {
+          if (arrayAttivita[i]["identificatore"] == attivita["madre"]) {
+            const madre = arrayAttivita[i];
+            const figlio = attivita;
+            motherPresent = true;
+            if (
+              figlio["inizio"] < madre["inizio"] ||
+              figlio["fine"] > madre["fine"]
+            ) {
+              alert("sotto-attivita non contenuta nella madre");
+              inizializza();
+              return;
+            }
+          }
+
+          if (
+            arrayAttivita[i]["identificatore"] == attivita["identificatore"]
+          ) {
+            alert("attiva con stesso identificatore gia presente");
+            inizializza();
+            return;
+          }
+        }
+        if (identificatore.value.split(".").length == 2) {
+          if (!motherPresent) {
+            alert("attivita madre non presente");
+            inizializza();
+            return;
+          }
+        }
+
+        dialogDescrizione.textContent = attivita["descrizione"];
+        arrayAttivita.push(attivita);
+
+        aggiornaTabella();
+        inizializza();
+      }
+      const MONTHS = 12;
+      function creaTabella() {
+        const tr = document.createElement("tr");
+        for (let i = 0; i <= MONTHS; i++) {
+          const th = document.createElement("th");
+          th.textContent = i;
+          if (i == 0) th.textContent = "";
+          tr.append(th);
+        }
+        tabella.append(tr);
+      }
+      creaTabella();
+      function aggiornaTabella() {
+        arrayAttivita.sort((a, b) => a["identificatore"] - b["identificatore"]);
+
+        let childs = document.querySelectorAll(".row");
+        if (childs.length) {
+          Array.from(childs).forEach((child) => tabella.removeChild(child));
+        }
+
+        for (let i = 0; i < arrayAttivita.length; i++) {
+          const tr = document.createElement("tr");
+          tr.setAttribute("class", "row");
+          for (let j = 0; j <= MONTHS; j++) {
+            const td = document.createElement("td");
+            if (j == 0) {
+              td.textContent = arrayAttivita[i]["identificatore"];
+              td.setAttribute("class", "id");
+            }
+            if (
+              j >= arrayAttivita[i]["inizio"] &&
+              j <= arrayAttivita[i]["fine"]
+            ) {
+              td.style.backgroundColor = "cyan";
+              td.addEventListener("click", showDialog);
+            }
+            td.id = j;
+            tr.append(td);
+          }
+          tabella.append(tr);
+        }
+      }
+      function showDialog(e) {
+        console.log("clickeed");
+        dialog.showModal();
+        titolo.textContent = "Documentazione, Mese " + e.target.id;
+      }
+    </script>
+  </body>
+</html>

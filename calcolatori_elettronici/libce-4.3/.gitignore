@@ -1,0 +1,13 @@
+*.o
+boot.bin
+libce32.a
+libce.conf
+libce64.a
+scripts/boot
+scripts/compile
+scripts/debug
+scripts/colorlog
+scripts/decodelog
+doc
+tags
+boot.debug

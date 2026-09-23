@@ -1,0 +1,31 @@
+[
+  {
+    "file": "sistema/sistema.cpp",
+    "arguments": [
+      "x86_64-elf-g++",
+      "-Wall",
+      "-fno-exceptions",
+      "-fno-rtti",
+      "-fno-pic",
+      "-fno-omit-frame-pointer",
+      "-fno-inline",
+      "-fno-stack-protector",
+      "-fcf-protection=none",
+      "-mno-red-zone",
+      "-mno-sse",
+      "-std=c++17",
+      "-Og",
+      "-ggdb3",
+      "-m64",
+      "-ffreestanding",
+      "-I/Users/matteofortino/CE/include/ce",
+      "-Iinclude",
+      "-c",
+      "sistema/sistema.cpp",
+      "-o",
+      "sistema/sistema.o"
+    ],
+    "directory": "/Users/matteofortino/UniPi/calcolatori_elettronici/esami_ce/2025-09-10_08/es2/nucleo",
+    "output": "sistema/sistema.o"
+  }
+]

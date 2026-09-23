@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Prenotazione Visite Settimanali</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        background: #f0f0f0;
+      }
+      .container {
+        display: flex;
+        height: 100vh;
+      }
+      .left,
+      .center,
+      .right {
+        padding: 20px;
+        box-sizing: border-box;
+      }
+      .left {
+        background: #ffe066;
+        width: 300px;
+        min-width: 250px;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+      }
+      .center {
+        background: #b3e0ff;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        overflow-x: auto;
+      }
+      .right {
+        background: #ffa94d;
+        width: 320px;
+        min-width: 250px;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: flex-start;
+      }
+      .form-group {
+        margin-bottom: 15px;
+        display: flex;
+        flex-direction: column;
+      }
+      label {
+        margin-bottom: 5px;
+        font-weight: bold;
+      }
+      input,
+      select {
+        padding: 6px;
+        border: 2px solid #ccc;
+        border-radius: 4px;
+        font-size: 16px;
+        outline: none;
+        transition: border 0.2s;
+      }
+      input.invalid,
+      select.invalid {
+        border-color: red;
+      }
+      button {
+        padding: 10px 20px;
+        background: #0077b6;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+      button:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+      }
+      .calendar-table {
+        border-collapse: collapse;
+        margin-top: 20px;
+        min-width: 800px;
+      }
+      .calendar-table th,
+      .calendar-table td {
+        border: 1px solid #888;
+        text-align: center;
+        width: 60px;
+        height: 40px;
+        cursor: pointer;
+        user-select: none;
+        transition: background 0.2s;
+      }
+      .calendar-table th {
+        background: #0096c7;
+        color: white;
+        position: sticky;
+        top: 0;
+        z-index: 1;
+      }
+      .slot-empty {
+        background: #fff;
+      }
+      .slot-1-2 {
+        background: #ffb3c6;
+      }
+      .slot-full {
+        background: #ff595e;
+        color: white;
+      }
+      .slot-disabled {
+        pointer-events: none;
+        opacity: 0.5;
+      }
+      .message,
+      .visite-table {
+        margin-top: 30px;
+        width: 100%;
+        animation: fadein 0.3s;
+      }
+      .message {
+        font-size: 18px;
+        font-weight: bold;
+        color: #333;
+      }
+      .visite-table {
+        border-collapse: collapse;
+        width: 100%;
+        background: #fff3e6;
+      }
+      .visite-table th,
+      .visite-table td {
+        border: 1px solid #ffa94d;
+        padding: 8px;
+        text-align: left;
+      }
+      @keyframes fadein {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <!-- Sinistra: Form inserimento -->
+      <div class="left">
+        <h2>Nuova Visita</h2>
+        <form id="visitaForm" autocomplete="off">
+          <div class="form-group">
+            <label for="nome">Nome</label>
+            <input type="text" id="nome" placeholder="Es: Mario" required />
+          </div>
+          <div class="form-group">
+            <label for="cognome">Cognome</label>
+            <input type="text" id="cognome" placeholder="Es: Rossi" required />
+          </div>
+          <div class="form-group">
+            <label for="giorno">Giorno</label>
+            <select id="giorno" required>
+              <option value="">Seleziona giorno</option>
+              <option value="Lun">Lun</option>
+              <option value="Mar">Mar</option>
+              <option value="Mer">Mer</option>
+              <option value="Gio">Gio</option>
+              <option value="Ven">Ven</option>
+              <option value="Sab">Sab</option>
+              <option value="Dom">Dom</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="ora">Ora</label>
+            <input
+              type="number"
+              id="ora"
+              placeholder="8-19"
+              min="8"
+              max="19"
+              required
+            />
+          </div>
+          <button type="submit" id="inserisciBtn" disabled>Inserisci</button>
+          <div
+            id="erroreSlot"
+            class="message"
+            style="color: red; display: none"
+          ></div>
+        </form>
+      </div>
+      <!-- Centro: Tabella calendario -->
+      <div class="center">
+        <h2>Calendario Visite</h2>
+        <table class="calendar-table" id="calendar">
+          <thead>
+            <tr>
+              <th>Giorno / Ora</th>
+              <!-- Ore dinamiche -->
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Righe dinamiche -->
+          </tbody>
+        </table>
+      </div>
+      <!-- Destra: Dettaglio slot -->
+      <div class="right" id="dettaglioSlot">
+        <!-- Dettaglio slot dinamico -->
+      </div>
+    </div>
+    <script>
+      // Dati
+      const giorniSettimana = ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"];
+      const oreGiornata = Array.from({ length: 12 }, (_, i) => 8 + i); // 8-19
+      // Struttura: { "Lun": { "8": [visite], ... }, ... }
+      const visite = {};
+      giorniSettimana.forEach((g) => {
+        visite[g] = {};
+        oreGiornata.forEach((o) => (visite[g][o] = []));
+      });
+
+      // Elementi DOM
+      const nomeInput = document.getElementById("nome");
+      const cognomeInput = document.getElementById("cognome");
+      const giornoSelect = document.getElementById("giorno");
+      const oraInput = document.getElementById("ora");
+      const inserisciBtn = document.getElementById("inserisciBtn");
+      const erroreSlot = document.getElementById("erroreSlot");
+      const visitaForm = document.getElementById("visitaForm");
+      const calendar = document.getElementById("calendar");
+      const dettaglioSlot = document.getElementById("dettaglioSlot");
+
+      let lockDettaglio = false;
+      let timeoutDettaglio = null;
+
+      // Validazione campi
+      function validaNome(nome) {
+        return /^[A-Z][a-zàèéìòù' -]*$/.test(nome);
+      }
+      function validaCognome(cognome) {
+        return /^[A-Z][a-zàèéìòù' -]*$/.test(cognome);
+      }
+      function validaGiorno(giorno) {
+        return giorniSettimana.includes(giorno);
+      }
+      function validaOra(ora) {
+        return Number.isInteger(+ora) && +ora >= 8 && +ora <= 19;
+      }
+      function aggiornaValidazione() {
+        const nomeValido = validaNome(nomeInput.value);
+        const cognomeValido = validaCognome(cognomeInput.value);
+        const giornoValido = validaGiorno(giornoSelect.value);
+        const oraValida = validaOra(oraInput.value);
+
+        nomeInput.classList.toggle("invalid", !nomeValido);
+        cognomeInput.classList.toggle("invalid", !cognomeValido);
+        giornoSelect.classList.toggle("invalid", !giornoValido);
+        oraInput.classList.toggle("invalid", !oraValida);
+
+        inserisciBtn.disabled = !(
+          nomeValido &&
+          cognomeValido &&
+          giornoValido &&
+          oraValida
+        );
+        erroreSlot.style.display = "none";
+      }
+      nomeInput.addEventListener("input", aggiornaValidazione);
+      cognomeInput.addEventListener("input", aggiornaValidazione);
+      giornoSelect.addEventListener("change", aggiornaValidazione);
+      oraInput.addEventListener("input", aggiornaValidazione);
+
+      // Inserimento visita
+      visitaForm.addEventListener("submit", function (e) {
+        e.preventDefault();
+        const nome = nomeInput.value.trim();
+        const cognome = cognomeInput.value.trim();
+        const giorno = giornoSelect.value;
+        const ora = oraInput.value;
+
+        if (
+          !validaNome(nome) ||
+          !validaCognome(cognome) ||
+          !validaGiorno(giorno) ||
+          !validaOra(ora)
+        ) {
+          aggiornaValidazione();
+          return;
+        }
+        const slot = visite[giorno][ora];
+        if (slot.length >= 3) {
+          erroreSlot.textContent = "Slot già pieno! Massimo 3 visite.";
+          erroreSlot.style.display = "block";
+          return;
+        }
+        slot.push({ nome, cognome });
+        aggiornaCalendario();
+        visitaForm.reset();
+        aggiornaValidazione();
+      });
+
+      // Genera tabella calendario
+      function creaIntestazione() {
+        const thead = calendar.querySelector("thead tr");
+        thead.innerHTML = "<th>Giorno / Ora</th>";
+        oreGiornata.forEach((ora) => {
+          const th = document.createElement("th");
+          th.textContent = ora;
+          thead.appendChild(th);
+        });
+      }
+      function aggiornaCalendario() {
+        const tbody = calendar.querySelector("tbody");
+        tbody.innerHTML = "";
+        giorniSettimana.forEach((giorno) => {
+          const tr = document.createElement("tr");
+          const th = document.createElement("th");
+          th.textContent = giorno;
+          tr.appendChild(th);
+          oreGiornata.forEach((ora) => {
+            const td = document.createElement("td");
+            const slot = visite[giorno][ora];
+            td.dataset.giorno = giorno;
+            td.dataset.ora = ora;
+            if (slot.length === 0) {
+              td.className = "slot-empty";
+            } else if (slot.length < 3) {
+              td.className = "slot-1-2";
+            } else {
+              td.className = "slot-full";
+            }
+            td.textContent = slot.length > 0 ? slot.length : "";
+            if (lockDettaglio) td.classList.add("slot-disabled");
+            tr.appendChild(td);
+          });
+          tbody.appendChild(tr);
+        });
+      }
+
+      // Gestione click sulle celle
+      calendar.addEventListener("click", function (e) {
+        if (lockDettaglio) return;
+        const td = e.target.closest("td");
+        if (!td) return;
+        mostraDettaglio(td.dataset.giorno, td.dataset.ora, false);
+      });
+      calendar.addEventListener("contextmenu", function (e) {
+        const td = e.target.closest("td");
+        if (!td) return;
+        e.preventDefault();
+        if (lockDettaglio) return;
+        mostraDettaglio(td.dataset.giorno, td.dataset.ora, true);
+      });
+
+      // Mostra dettaglio slot
+      function mostraDettaglio(giorno, ora, ordineAlfabetico) {
+        lockDettaglio = true;
+        aggiornaCalendario();
+        dettaglioSlot.innerHTML = "";
+        const slot = visite[giorno][ora];
+        if (slot.length === 0) {
+          const msg = document.createElement("div");
+          msg.className = "message";
+          msg.textContent = "Nessuna visita prevista per questo slot.";
+          dettaglioSlot.appendChild(msg);
+        } else {
+          const table = document.createElement("table");
+          table.className = "visite-table";
+          const thead = document.createElement("thead");
+          thead.innerHTML = "<tr><th>Nome</th><th>Cognome</th></tr>";
+          table.appendChild(thead);
+          const tbody = document.createElement("tbody");
+          let visiteDaMostrare = slot.slice();
+          if (ordineAlfabetico) {
+            visiteDaMostrare.sort((a, b) => a.cognome.localeCompare(b.cognome));
+          }
+          visiteDaMostrare.forEach((v) => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `<td>${v.nome}</td><td>${v.cognome}</td>`;
+            tbody.appendChild(tr);
+          });
+          table.appendChild(tbody);
+          dettaglioSlot.appendChild(table);
+        }
+        // Blocca click per 5 secondi
+        clearTimeout(timeoutDettaglio);
+        timeoutDettaglio = setTimeout(() => {
+          dettaglioSlot.innerHTML = "";
+          lockDettaglio = false;
+          aggiornaCalendario();
+        }, 5000);
+      }
+
+      // Inizializzazione
+      creaIntestazione();
+      aggiornaCalendario();
+      aggiornaValidazione();
+    </script>
+  </body>
+</html>

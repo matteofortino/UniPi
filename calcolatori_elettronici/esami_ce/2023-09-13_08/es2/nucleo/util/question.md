@@ -1,0 +1,77 @@
+Definiamo una nuova zona della memoria virtuale di ogni processo, che
+mappa semplicemente della memoria fisica in lettura/scrittura. Il primi
+processi, creati direttamente dal nucleo, partono con una zona che
+contiene solo zeri. I processi possono modificare liberamente la propria
+zona, e ciascuno vede solo le proprie modifiche. Ogni volta che un
+processo padre crea un processo figlio (tramite `activate_p()` o
+`activate_pe()`), il figlio riceve una copia della zona del padre,
+visibile agli stessi indirizzi e con il contenuto attuale. Da quel punto
+in poi padre e figlio possono modificare la propria copia
+indipendentemente.
+
+Invece di copiare davvero tutto il contenuto della zona ad ogni
+creazione di processo, adottiamo l'ottimizzazione del *Copy-On-Write*
+(COW): al momento della creazione del processo figlio disabilitiamo le
+scritture per tutti gli indirizzi appartenenti alla zona del padre,
+quindi facciamo in modo che la tabella di livello 4 del processo figlio
+punti direttamente alle tabelle di livello 3 del TRIE del padre che
+mappano la zona. In questo modo i due processi condivideranno tutte le
+pagine della zona e tutto il sotto-TRIE che le mappa nelle loro memorie
+virtuali. Quando il processo padre o figlio cercheranno di scrivere
+nella zona, la MMU genererà una eccezione di page-fault. Invece di
+terminare il processo, la routine di gestione dell'eccezione (già in
+gran parte realizzata) copierà la pagina interessata in una nuova
+pagina, riabilitarà il permesso di scrittura nella pagina solo per il
+processo che ha causato il fault e poi farà ripartire il processo, che
+ripeterà l'istruzione interrotta. Si noti che, per abilitare il permesso
+di scrittura solo per il processo che ha causato il fault, la routine
+dovrà anche creare opportune copie delle eventuali tabelle del TRIE che
+risultassero ancora condivise con altri processi.
+
+Il meccanismo appena descritto comporta che le pagine e le tabelle
+relative alla zona possono in generale essere condivise da un numero
+variabile di processi (si pensi a un processo che crea un figlio, che
+poi ne crea un altro, che ne crea un altro e così via, e si pensi a cosa
+succede quando uno di questi processi tenta di scrivere in una pagina
+della zona, prima o dopo aver creato un figlio). Dobbiamo stare attenti
+a deallocare solo le tabelle e le pagine della zona che non sono più
+condivise con altri processi. Per sapere quali tabelle o pagine sono
+condivise, manteniamo un contatore `nshared` per ciascuna di esse (lo
+mettiamo nel `des_frame` del frame che contiene la tabella o la pagina).
+Il contatore deve contare il numero di processi attivi che hanno la
+tabella o la pagina nel proprio TRIE, e deve essere aggiornato
+opportunamente ogni volta che un processo nasce o muore, oppure viene
+generato un page fault in scrittura sulla zona. La tabella/pagina va
+deallocata (`rilascia_tab` o `rilascia_frame`) se e solo se il suo
+contatore passa a zero.
+
+Per realizzare il meccanismo aggiungiamo il campo `nshared` ai
+descrittori frame e introduciamo le seguenti funzioni:
+
+-   `bool crea_cow(paddr dest)` (già realizzata): crea la prima versione
+    della zona, nel TRIE di radice `dest`, e la riempie di zeri.
+
+-   `void copia_cow(paddr srd, paddr dest)` (da realizzare): chiamata
+    durante la creazione di un processo, copia la zona dal TRIE di
+    radice `src` al TRIE di radice `dest`, usando la tecnica COW e
+    aggiornando opportunamente i contatori `nshared`;
+
+-   `bool aggiorna_cow(vaddr v)` (realizzata in parte): chiamata dalla
+    routine di page fault; aggiorna il TRIE del processo corrente per
+    abilitare la scrittura nella pagina che contiene `v` secondo la
+    tecnica COW; va realizzata la parte che gestisce i contatori
+    `nshared`;
+
+-   `void distruggi_cow()` (da realizzare): chiamata durante la
+    distruzione di un processo; rilascia tutte le risorse associate alla
+    zona COW del processo corrente, purché non siano ancora condivise
+    con altri processi.
+
+Modificare il file `sistema.cpp` aggiungendo le parti mancanti.
+
+**Attenzione**: si ricordi che le tabelle hanno anche un proprio
+contatore, `nvalide`, che conta il numero di entrate con bit P a 1.
+Quando si copia o modifica una tabella bisogna mantenere la consistenza
+del contatore `nvalide`. Inoltre, prima di deallocare una tabella,
+`nvalide` deve essere zero. Funzioni utili per la manipolazione del
+contatore `nvalide`: `copy_des`, `inc_ref`, `dec_ref`, `set_des`.

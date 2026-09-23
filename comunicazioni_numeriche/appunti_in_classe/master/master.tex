@@ -1,0 +1,105 @@
+
+\documentclass[11pt,a4paper]{article}
+
+% ==============================
+% 📦 PACKAGES
+% ==============================
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{geometry}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{mathtools}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\usepackage{listings}
+\usepackage{tcolorbox}
+\usepackage{tikz}
+\usepackage[american]{circuitikz}
+\pgfplotsset{compat=1.18}
+
+% ==============================
+% 📐 PAGE STYLE
+% ==============================
+
+\geometry{
+    left=2.5cm,
+    right=2.5cm,
+    top=2.5cm,
+    bottom=2.5cm
+}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt}
+
+% ==============================
+% 🎨 COLOR PALETTE (Minimal & Elegant)
+% ==============================
+
+\definecolor{mainblue}{RGB}{25,55,109}
+\definecolor{lightgray}{RGB}{245,245,245}
+
+% ==============================
+% 📦 THEOREM ENVIRONMENTS
+% ==============================
+
+\newtheorem{theorem}{Teorema}[section]
+\newtheorem{definition}{Definizione}[section]
+\newtheorem{proposition}{Proposizione}[section]
+\newtheorem{example}{Esempio}[section]
+
+% ==============================
+% 🧠 CUSTOM BOXES (Very Clean)
+% ==============================
+
+\newtcolorbox{importantbox}{
+    colback=lightgray,
+    colframe=mainblue,
+    boxrule=0.8pt,
+    arc=4pt
+}
+
+% ==============================
+% 💻 CODE STYLE
+% ==============================
+
+\lstset{
+    language=C++, % cambia se vuoi (Python, Java, ecc.)
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{blue},
+    commentstyle=\color{gray},
+    stringstyle=\color{red},
+    numbers=left,
+    numberstyle=\tiny,
+    stepnumber=1,
+    numbersep=8pt,
+    backgroundcolor=\color{lightgray},
+    frame=single,
+    breaklines=true
+}
+
+% ==============================
+% 📄 DOCUMENT
+% ==============================
+
+
+\begin{document}
+
+\begin{center}
+\LARGE \textbf{ Appunti di Comunicazioni Numeriche}
+\end{center}
+
+\tableofcontents
+\newpage
+\input{../2026-03-17/body.tex}
+\input{../2026-03-19/body.tex}
+\input{../2026-03-20/body.tex}
+\end{document}

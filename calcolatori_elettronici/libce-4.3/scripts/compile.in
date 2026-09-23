@@ -1,0 +1,188 @@
+#!/bin/bash
+# Script per compilare programmi 'bare' da caricare nella macchina QEMU.
+#
+# Lo script compila, con parametri opportuni, tutti i file c++ e assembly
+# contenuti nella directory corrente.  Se non ci sono errori, genera i seguenti
+# file:
+#
+# - boot/0-a.out:	versione pronta per il caricamento (script boot)
+# - debug/0-aout:	versione usata dal debugger (script debug)
+#
+# Le directory boot e debug vengono create se non esistono già.
+#
+# Lo script accetta un argomento opzionale, che viene usato come nome del file
+# al posto di a.out; per es., se l'argomento è hello, lo script crea i file
+# boot/0-hello e debug/0-hello.  Inoltre, se 'argomento è il nome di una
+# directory esistente, i file sorgenti vengono cercati in quella directory,
+# invece che nella directory corrente.
+
+
+# Includiamo il file di configurazione di libce.  Il file contiene la
+# definizione delle seguenti variabili:
+#
+# - CE_CXX64:	programma da usare come compilatore
+# - CE_AS64:	programma da usare come assemblatore
+# - CE_LD64:	programma da usare come collegatore
+# - CE_INCLUDE: directory che contiene libce.h, vm.h etc.
+# - CE_STRIP:	programma da usare per rimuovere le informazioni di debug
+# - CE_LIB64:	directory che contiene libce.a
+# - CE_LIB32:	directory che contiene lo script per il linker
+source @CE_ETC@/libce.conf
+
+# nome del file da generare; a.out per default
+OUTPUT=${1:-a.out}
+# directory che contiene i sorgenti; directory corrente per default
+DIRECTORY=
+if [ -d "$OUTPUT" ]; then
+	DIRECTORY="$OUTPUT/"
+fi
+# aggiungiamo il prefisso 0- al nome del file. Il prefisso è usato dallo script
+# boot per capire quale file deve essere caricato per primo.
+OUTPUT="0-$OUTPUT"
+
+# Se la directory corrente contiene una sottodirectory 'include', la directory
+# viene aggiunta al percorso di ricerca dei file da includere da parte del
+# compilatore e dell'assemblatore.
+LOCAL_INCLUDE=
+if [ -d include ]; then
+	LOCAL_INCLUDE=1
+fi
+
+# Opzioni per il compilatore:
+#
+# -Wall 	abilita tutti i warning
+# -fno-exceptions
+# -fno-rtti
+# 		disabilita il meccanismo delle interruzioni e
+# 		la Run-Time-Tipe-Information del C++; entrambe
+# 		richiedono un supporto a run time che non abbiamo
+# 		realizzato
+# -fno-pic
+# -no-pie
+# 		disabilita il Position Independent Code e il
+# 		Position Independend Executable; entrambe
+# 		renderebbero il debugging più complicato
+# -fno-omit-frame-pointer
+# -fno-inline
+# 		disabilita alcune ottimizzazioni che rendono
+# 		il debugging più complicato
+# -fno-stack-protector
+# -fcf-protection=none
+# 		disabilita alcune mitigazioni che rendono il
+# 		codice generato più confuso
+# -mno-red-zone
+# 		i programmi bare girano a livello sistema e
+# 		possono usare la red zone solo se sono
+# 		non-interrompibili; la disabilitiamo per
+# 		sicurezza
+# -mno-sse
+# 		disabilitiamo le Streaming SIMD Extensions
+# 		(il supporto richiede una inizializzazione che
+# 		non facciamo; non possono comunque essere usate
+# 		nel modulo sistema)
+# -std=c++17	forziamo lo standard c++17 (per align_t)
+# -Og
+# 		ottimizza per il debugging
+# -ggdb3
+# 		includi le informazioni di debugging
+# -freestanding
+# 		il programma girerà direttamente sulla macchina
+# 		QEMU, senza sistema operativo
+# -m64		compila a 64 bit (utile solo se il sistema ospite
+# 		è invece a 32 bit)
+#
+# Si possono passare ulteriori opzioni tramite la variabile di ambiente CFLAGS.
+COMPILER_OPTIONS="
+	-Wall
+	-fno-exceptions
+	-fno-rtti
+	-fno-pic
+	-no-pie
+	-fno-omit-frame-pointer
+	-fno-inline
+	-fno-stack-protector
+	-fcf-protection=none
+	-mno-red-zone
+	-mno-sse
+	-std=c++17
+	-Og
+	-ggdb3
+	-m64
+	-ffreestanding
+	-I${CE_INCLUDE}
+	${LOCAL_INCLUDE+-Iinclude}
+	$CFLAGS
+	"
+
+# se è definita la variabile di ambiente AUTOCORR, definiamo la macro AUTOCORR.
+# In questo modo la funzione printf() invierà i messaggi sul log invece che sul
+# video, e la funzione pause() non attenderà la pressione di un tasto.
+# (Questa funzionalità è usata sul sito dell'autocorrezione per lanciare i
+# programmi in maniera non interattiva e catturarne l'output).
+if [ -n "$AUTOCORR" ]; then
+	COMPILER_OPTIONS+=" -DAUTOCORR"
+fi
+
+# Opzioni per l'assemblatore:
+# -x assembler-with-cpp
+# 			usa le direttive #include e #define come nel C++
+# -g			includi le informazioni di debugging
+# -m64			assembla per architettura a 64 bit (utile solo
+# 			se la macchina ospite è invece a 32 bit)
+#
+# Si possono passare ulteriori opzioni tramite la variabile di ambiente ASFLAGS.
+ASSEMBLER_OPTIONS="
+	-x assembler-with-cpp
+	-g
+	-m64
+	-I${CE_INCLUDE}
+	${LOCAL_INCLUDE+-Iinclude}
+	$ASFLAGS
+	"
+
+# Opzioni per il collegatore
+#
+# -melf_x86_64		produci un file ELF per architettura AMD/Intel a 64 bit
+# -nostdlib		non collegare le librerie e file di startup/cleanup standard
+# --defsym=LOAD_ADDRESS=...
+# 			definiamo il simbolo LOAD_ADDRESS che è usato dallo script
+# 			del linker della libce per calcolare l'indirizzo di caricamento
+# 			del programma
+# -T...			file contenente lo script del linker
+#
+# Si possono passare ulteriori opzioni tramite la variabile di ambiente LDFLAGS.
+LINKER_OPTIONS="
+	-melf_x86_64
+	-nostdlib
+	--defsym=LOAD_ADDRESS=0x200000
+	-z noexecstack
+	-T${CE_LIB32}/boot.ld
+	-L${CE_LIB64}
+	$LDFLAGS
+	"
+
+# diciamo alla shell di fermarsi al primo errore
+set -e
+
+# compiliamo tutti i file *.cpp
+shopt -s nullglob
+for f in $DIRECTORY*.cpp; do
+	echo "[compile] ==> Compilo  $f"
+	$CE_CXX64 $COMPILER_OPTIONS -c $f -o ${f%.cpp}.o || exit 1
+done
+
+# assembliamo tutti i file *.s
+for f in $DIRECTORY*.s; do
+	echo "[compile] ==> Assemblo $f"
+	$CE_AS64 $ASSEMBLER_OPTIONS -c -o ${f%.s}_s.o $f || exit 1
+done
+shopt -u nullglob
+
+# colleghiamo la versione per il debugger
+echo "[compile] ==> Collego  debug/$OUTPUT [0x200000]"
+mkdir -p debug
+$CE_LD64 $LINKER_OPTIONS $DIRECTORY*.o -lce64 -o "debug/$OUTPUT" || exit 1
+# colleghiamo la versione per il boot loader
+echo "[compile] ==> Genero   boot/$OUTPUT"
+mkdir -p boot
+$CE_STRIP "debug/$OUTPUT" -o "boot/${OUTPUT}"

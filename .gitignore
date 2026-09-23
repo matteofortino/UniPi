@@ -1,0 +1,9 @@
+macchina_virtuale/
+sistemi_operativi/libro
+.DS_Store
+__MACOSX
+__pycache__
+.venv
+*.bak
+*.cache
+GAS/

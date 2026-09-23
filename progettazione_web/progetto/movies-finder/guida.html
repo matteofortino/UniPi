@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Guida al Portale di Film</title>
+    <style>
+      /* Sfondo globale con gradient */
+      body {
+        font-family: Arial, sans-serif;
+        line-height: 1.6;
+        margin: 0;
+        padding: 20px;
+        background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+        color: #ffffff;
+      }
+
+      /* Stile titoli */
+      h1,
+      h2,
+      h3 {
+        color: #f0f0f0;
+      }
+
+      /* Contenitore delle sezioni */
+      section {
+        background-color: rgba(
+          255,
+          255,
+          255,
+          0.1
+        ); /* trasparenza per vedere il gradient dietro */
+        padding: 20px;
+        margin-bottom: 20px;
+        border-radius: 10px;
+      }
+
+      ul {
+        margin-left: 20px;
+      }
+
+      code {
+        background-color: rgba(255, 255, 255, 0.2);
+        padding: 2px 5px;
+        border-radius: 3px;
+        color: #ffffff;
+      }
+
+      /* Bottone */
+      .btn {
+        display: inline-block;
+        padding: 12px 25px;
+        margin-top: 10px;
+        font-size: 16px;
+        font-weight: bold;
+        color: #ffffff;
+        text-decoration: none;
+        border-radius: 8px;
+        background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+        border: 2px solid #ffffff50;
+        transition:
+          transform 0.2s,
+          box-shadow 0.2s;
+      }
+
+      .btn:hover {
+        transform: scale(1.05);
+        box-shadow: 0 5px 15px rgba(255, 255, 255, 0.3);
+      }
+
+      footer {
+        text-align: center;
+        padding: 10px;
+        font-size: 14px;
+        color: #dddddd;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Guida al Portale di Film</h1>
+      <p>
+        Questa guida spiega in dettaglio come funziona il nostro portale web per
+        la gestione dei film e delle amicizie tra utenti.
+      </p>
+    </header>
+
+    <section>
+      <h2>1. Registrazione e Accesso</h2>
+      <p>Per utilizzare il portale, un utente deve registrarsi creando:</p>
+      <ul>
+        <li>
+          Un <strong>username univoco</strong> (non può essere uguale a quello
+          di un altro utente).
+        </li>
+        <li>Una <strong>password</strong> sicura.</li>
+      </ul>
+      <p>
+        Dopo la registrazione, l'utente può effettuare il login con le proprie
+        credenziali.
+      </p>
+    </section>
+
+    <section>
+      <h2>2. Ricerca e Visualizzazione dei Film</h2>
+      <p>
+        Una volta loggato, l'utente può cercare film usando la barra di ricerca:
+      </p>
+      <ul>
+        <li>Inserendo il titolo del film.</li>
+        <li>La ricerca mostra una lista di risultati corrispondenti.</li>
+      </ul>
+      <p>Cliccando su un film, l'utente vede le informazioni relative, come:</p>
+      <ul>
+        <li>Trama</li>
+        <li>Anno di uscita</li>
+        <li>Genere</li>
+        <li>Attori principali</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>3. Aggiunta dei Film ai Preferiti</h2>
+      <p>
+        Ogni film ha una <strong>stellina</strong> che permette di aggiungerlo
+        ai propri preferiti:
+      </p>
+      <ul>
+        <li>
+          Cliccando sulla stellina, il film viene aggiunto alla lista dei
+          preferiti dell'utente.
+        </li>
+        <li>
+          La lista dei preferiti è visibile nella sezione dedicata sul profilo
+          dell'utente.
+        </li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>4. Gestione delle Amicizie</h2>
+      <h3>4.1 Invio di richieste di amicizia</h3>
+      <p>
+        L'utente può cercare altri utenti tramite lo
+        <strong>username</strong> (attenzione: la ricerca è
+        <em>case sensitive</em>) e inviare loro una richiesta di amicizia.
+      </p>
+
+      <h3>4.2 Ricezione e gestione delle richieste</h3>
+      <ul>
+        <li>
+          Gli utenti che ricevono una richiesta la vedono apparire nella stessa
+          pagina.
+        </li>
+        <li>
+          Possono scegliere di <strong>accettare</strong> o
+          <strong>rifiutare</strong> la richiesta.
+        </li>
+        <li>
+          Se accettata, la schermata mostra che i due utenti sono ora amici.
+        </li>
+      </ul>
+
+      <h3>4.3 Visualizzazione dei preferiti degli amici</h3>
+      <p>
+        Cliccando sul nome di un amico, l'utente può vedere i film che l'amico
+        ha aggiunto ai preferiti.
+      </p>
+    </section>
+
+    <section>
+      <h2>5. Riepilogo delle Funzionalità</h2>
+      <ul>
+        <li>Registrazione e login con username univoco e password.</li>
+        <li>Ricerca e visualizzazione dei film.</li>
+        <li>Aggiunta dei film ai preferiti tramite stellina.</li>
+        <li>Invio, ricezione e gestione delle richieste di amicizia.</li>
+        <li>Visualizzazione dei film preferiti degli amici.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>6. Vai alla Pagina Successiva</h2>
+      <p>Puoi cliccare sul bottone qui sotto per visitare la home</p>
+      <a href="index.php" class="btn">Vai alla Home</a>
+    </section>
+
+    <footer>
+      <p>© 2026 Portale Film - Guida ufficiale agli utenti</p>
+    </footer>
+  </body>
+</html>

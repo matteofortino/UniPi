@@ -1,0 +1,28 @@
+#!/usr/bin/perl
+
+open IN, "<$ARGV[0]" || die $!;
+MAIN: while (<IN>) {
+	if (/^([_a-zA-Z]\w*):/) {
+		$name = $1;
+		s/.*:\s*(\/\/\s*\()?/void $name(/;
+		s/\)?\s*$/)\n/;
+	}
+	s/\.cfi_startproc/{/;
+	s/\.cfi_endproc/}/;
+	s/\.global.*//;
+	s/\.extern.*//;
+	if (/.macro/) {
+		s/\s+/,/g;
+		s/\.macro\s*,(\w+)\s*,?/#define $1(/;
+		s/,?$/)\n/;
+		print $_;
+		while (<IN>) {
+			s/^/\/\//;
+			print $_;
+			if (/\.endm/) {
+				next MAIN;
+			}
+		}
+	}
+	print $_;
+}

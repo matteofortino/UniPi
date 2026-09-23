@@ -1,0 +1,232 @@
+% ==============================
+\section{lezione del 17-03-26}
+\subsection{Trasformata di Fourires discreta}\label{sub:Trasformata di Fourires discreta} % (fold)
+Per portare la trasformata di Fourier in forma discreta utilizziamo il classico approccio
+partendo da:
+\[
+   x(t) = \int x(t)dt 
+\]
+scelgiamo un intervallo di campionamento $ \Delta t $ con annesa frequenza 
+$f = \frac{1}{\Delta t}$ che diventerà la nostra \textit{frequenza di campionamento}
+e trasformiato l'intregrale in una sommatoria
+\[
+    \sum_{n = 0}^{N-1}x(n\Delta t)\Delta t
+\]
+Applicando questo processo alla suddetta traformata otteniamo
+\[
+    X(k\Delta f) = \int_{- \infty}^{+\infty} x(t)e^{- j 2 \pi k \Delta f t} dt \approx \Delta t \sum_{n = 0}^{N - 1} x(n\Delta t)e^{- j 2 \pi k \Delta f n \Delta t}
+\]
+dove abbiamo 
+\begin{itemize}
+    \item $\Delta f$ detta \textit{frequenza di campionaneto}, nello spettro delle frequenze 
+        spesso viene presa $\Delta f = \frac{1}{N \Delta t}$ detta anche \textit{frequenza normalizzata}
+    \item $\Delta t$ detto \textit{periodo di campionamento}, nel dominio del tempo
+    \item $n$ detto \textit{indice temporate}, scelto arbitrariamente
+    \item $k$ detto \textit{indice delle frequenza}, scelto arbitrariamente
+\end{itemize}
+
+Se vogliamo cambiare la frequenza di campionamento $f_c = k\Delta f$ variamo $k$. 
+Per calcolare la trasformata alla frequenza $f_c$ prendiamo tutti gli $N - 1$ contributi variando $n$ 
+
+Possiamo quindi scrivere questa operazione in forma vettoriale
+\[
+\mathbf{X} =
+\begin{pmatrix}
+X\left( 0 \right) \\
+\vdots \\
+X\left( (K - 1) \Delta f \right)
+\end{pmatrix} =
+\Delta t \mathbf{F}
+\begin{pmatrix}
+x \left( 0 \right) \\
+\vdots \\
+x \left( (N - 1) \Delta t \right) \\
+\end{pmatrix} =
+\Delta t \mathbf{F} \mathbf{x}
+\]
+% subsection Trasformata di Fourires discreta (end)
+
+dove $K$ è la lunghezza del vettore di frequenze, $\mathbf{X}$ e $\mathbf{x}$ 
+sono i vettori delle frequenze e dei campioni temporali rispettivamente, campionati nei punti 
+$0, ..., K - 1$ e $0, ..., N - 1$.
+
+La matrice $\mathbf{F}$ sarà invece quella degli operatori della trasformata di Fourier, cioè:
+$$
+\mathbf{F}_{kn} = e^{- i 2 \pi k \Delta f n \Delta t}
+$$
+
+Facciamo alcune considerazioni in termini di complessità. Abbiamo che:
+\begin{itemize}
+	\item $\mathbf{X}$ ha dimensione $K \times 1$;
+	\item $\mathbf{x}$ ha dimensione $N \times 1$;
+	\item $\mathbf{F}$ ha dimensione $K \times N$.
+\end{itemize}
+Questo significherà che il numero di operazioni necessarie è nell'ordine di:
+$$
+O(KN) \quad \left( O(N^2) \right)
+$$
+Da cui notiamo che spesso si prende $K = N$ ovvero tanti campioni frequenziali 
+quanti campioni temporali. Questo porta la complessita totale ad essere $O(N^2)$ 
+che non è ottimale. Si va in ricerva di una approccio migliore. 
+
+\subsection{Trasformata di Fourier discreta veloce}
+Come detto in prencedenta la \textbf{DFT}(\textit{Discrete Fourier Transform}) 
+che ricordiamo essere definita come 
+\[
+    X(k\Delta f) \approx \Delta t \sum_{n = 0}^{N - 1} x(n\Delta t)e^{- j \frac{2 \pi}{N} k }
+\]
+se prendiamo come $\Delta f = \frac{1}{N \Delta t}$. 
+Come abbiamo detto questa operazione ha una complessità pari a $O(N^2)$ cerchiamo 
+quindi di trovare una ottimizzazione. 
+Pur non riportandoli guardiamo agli algoritmi maggiormente utilizzati:
+\begin{itemize}
+    \item \textit{Algoritmo di Cooley-Tukey}, basato sul principio \textit{divide-et-impera}
+        che divide ricorsivamente la traformata in più traformate di piccole
+        dimensione $N_1$ e $N_2$ tale che $N = N_1N_2$. 
+    \item \textit{Algoritmo di Good-Thomas} detto anche \textbf{PFA}(\textit{Prime Factor Algorithm})
+        utilizzabile sono quando $N_1$ e $N_2$ sono \textit{coprimi}(il massimo comune divisore deve essere 1). 
+\end{itemize}
+Questi algoritmi hanno come complessità $Nlog_2N$ molto ridotta rispetto al 
+semplice calcolo matriciale. \\ 
+Prendiamo coem esempio una clock di $1GHz$ e un $N = 4096 = 2^{12}$ e vediamo la differenza. 
+\begin{itemize}
+    \item Utilizzando il calcolo matriciale abbiamo
+
+        \[
+            T_N = \frac{N^2}{10^9} \approx 0.016s, \quad\quad f_N \leq \frac{N}{T_N} \approx 256 kHz
+        \]
+    \item  Utilizzano uno degli algoritmi
+        $$ 
+            T_N = \frac{Nlog_2N}{10^9} \approx 50us, \quad\quad f_N \leq \frac{N}{T_N} \approx 80GHz
+        $$ 
+\end{itemize}
+Si nota subito che il tempo di calcolo diminuisce drasticamente e questo ci permette
+di lavorare a frequenze più alte.
+\subsection{Antitrasformata di Fourtier}
+L'antitraformata di Fourier si calcola in maniera compelatemente duale a come visto
+prima che ricordiamo essere
+$$
+    \mathbf X = \Delta t \mathbf F \mathbf x
+$$
+Per calcolare l'antitraformata basta passare alla matrice \textit{hermitiana}
+\[
+    \mathbf x = \Delta t \mathbf F^H \mathbf X
+\]
+lasciando inalterati $\mathbf X$, e $\mathbf x$. \\ 
+Anche l'antitraformata ha un algoritmo ottimizzato che non riportiamo per semplicità 
+che prende il nome di \textbf{IFFT}(\textit{Inverse Fast Fourier Transform}.
+\subsection{Teroemi sulla traformata di Fourier}
+Vediamo ora dei teoremi relativi alla traformata di Fourtier
+\begin{enumerate}
+\item \begin{theorem}{Linearità della trasformata di Fourier}
+Vale che:
+$$
+x(t) = \alpha_1 x_1(t) + \alpha_2 x_2(t) \implies X(f) = \alpha_1 X_1(f) + \alpha_2 X_2(f)
+$$
+\end{theorem}
+Questo viene direttamente dalla forma dell'equazione di analisi:
+$$
+X(f) = \int_{-\infty}^{\infty} \alpha_1 x_1(t) e^{-i 2 \pi  f t} \, dt + \int_{-\infty}^{\infty} \alpha_2 x_2(t) e^{-i 2 \pi  f t} \, dt
+$$
+e applicando la linearità dell'operatore integrale (possiamo estrarre gli $\alpha_i$), per cui:
+$$
+X(f) = \alpha_1 X_1(f) + \alpha_2 X_2(f)
+$$
+che è la tesi. \hfill $\square$
+
+\item \begin{theorem}{Scalabilità della trasformata di Fourier}
+Vale che:
+$$
+x(kt) \rightarrow \frac{1}{k} X\left(\frac{f}{k}\right) 
+$$
+\end{theorem}
+Questo si dimostra prendendo l'espressione di sintesi:
+$$
+\int_{-\infty}^{\infty} x(kt) e^{-i 2 \pi f t} \, dt
+$$
+e operando il cambio di variabile:
+$$
+u = kt, \quad du = k \, dt
+$$
+per cui:
+$$
+= \int_{-\infty}^{\infty} x(u) e^{-i 2 \pi f \frac{u}{k}} \, \frac{du}{k} = \frac{1}{k} X\left(\frac{f}{k}\right)
+$$
+che è la tesi. \hfill $\square$
+
+\item \begin{theorem}{Dualità della trasformata di Fourier}
+Vale che:
+$$
+x(t) \rightarrow X(f) \implies X(t) \rightarrow x(-f)
+$$
+\end{theorem}
+Questo viene in qualche modo dalle osservazioni sulla simmetria fatte in 6.1.1. In particolare, scambiando $t$ ed $f$ nell'equazione di sintesi, si ha:
+$$
+x(f) = \int_{-\infty}^{\infty} X(t) e^{i 2 \pi t f} \, dt
+$$
+per cui notiamo che dobbiamo scambiare $f$ con $-f$ per ottenere:
+$$
+x(-f) = \int_{-\infty}^{\infty} X(t) e^{-i 2 \pi f t} \, dt
+$$
+che è la tesi. \hfill $\square$
+
+Applicando questo teorema, ad esempio, ala funzione rettangolare (vista sempre in 6.1.1), otteniamo:
+$$
+x(t) = \mathrm{rect} \left( \frac{t}{\tau} \right) \rightarrow \tau \mathrm{sinc} (f \tau) \implies \tau \mathrm{sinc} (t \tau) \rightarrow \mathrm{rect} \left(\frac{f}{\tau}\right) 
+$$
+mentre applicandolo alla funzione esponenziale monolatera si ha:
+$$
+x(t) = e^{-\frac{t}{\tau}} u(t) \rightarrow \frac{\tau}{1 + i 2 \pi f \tau} \implies \frac{\tau}{1 + i 2 \pi t \tau} \rightarrow e^{\frac{f}{\tau}} u(-f)
+$$
+Notiamo che una particolarità di questo ultimo spettro è che non è simmetrico: questo è reso possibile dal fatto che il segnale considerato, cioè:
+$$
+X(t) = \frac{\tau}{1 + i 2 \pi t \tau}
+$$
+è \textit{complesso} $\in \mathbb{C}$ (quindi non ha ipotesi di simmetria).
+
+\item \begin{theorem}{Ritardo della trasformata di Fourier}
+Vale che:
+$$
+y(t) = x(t - t_0) \implies Y(f) = X(f) e^{-i 2 \pi f t_0}
+$$
+\end{theorem}
+
+Cioè un ritardo temporale introduce una variazione di fase che cambia linearmente con la frequenza, ma non cambia lo spettro di ampiezza. Diciamo linearmente, in quanto dobbiamo ricordare che:
+$$
+|Y(f)| = |X(f)|, \quad \mathrm{arg} \left( Y(f) \right) = \mathrm{arg} \left( X(f) \right) - 2 \pi f t_0
+$$
+
+Questo si dimostra dall'equazione di analisi:
+$$
+X(f) = \int_{-\infty}^{\infty} x(t - t_0) e^{-i 2 \pi f t} \, dt
+$$
+Ponendo il cambio di variabile $\alpha = t - t_0$, si ottiene:
+$$
+X(f) = \int_{-\infty}^{\infty} x(\alpha) e^{-i 2 \pi f \alpha + t_0} \, d \alpha = e^{-i 2 \pi f t_0} \int_{-\infty}^{\infty} x(\alpha) e^{-i 2 \pi f \alpha} \, d \alpha
+$$
+che è la tesi. \hfill $\square$
+
+\item \begin{theorem}{Teorema della modulazione}
+Vale che:
+$$
+x(t) \cos(2 \pi f_0 t) \rightarrow \frac{X(f - f_0) + X(f + f_0)}{2}
+$$
+\end{theorem}
+Dimostriamo quindi il teorema. Il risultato ottenuto si ha dall'equazione di analisi applicata all'espressione data:
+$$
+X(f) = \int_{-\infty}^{\infty} x(t) \cos(2 \pi f_0 t) e^{-i 2 \pi f t} \, dt
+$$
+e prendendo il coseno nella forma esponenziale data dalle equazioni di Eulero:
+$$
+\cos(\alpha) = \frac{e^{i\alpha} + e ^{-i\alpha}}{2}
+$$
+da cui:
+$$
+X(f) = \int_{-\infty}^{\infty} x(t) \frac{e^{i 2\pi f_0 t} + e^{-i 2 \pi f_0 t}}{2} e^{-i 2 \pi f t} \, dt 
+$$
+$$
+= \frac{1}{2} \int_{-\infty}^{\infty} x(t) e^{-i 2 \pi (f - f_0) t} \, dt + \frac{1}{2} \int_{-\infty}^{\infty} x(t) e^{-i 2 \pi (f + f_0) t} \, dt = \frac{X(f - f_0) + X(f + f_0)}{2}
+$$
+che è la tesi. \hfill $\square$
+
+\end{enumerate}

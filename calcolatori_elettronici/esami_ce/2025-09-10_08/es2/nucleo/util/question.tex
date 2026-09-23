@@ -1,0 +1,73 @@
+Colleghiamo al sistema delle periferiche PCI di tipo \verb|ce|, con vendorID \verb|0xedce| e deviceID \verb|0x1234|.
+Ogni periferica \verb|ce| usa 16 byte nello spazio di I/O a partire dall'indirizzo base specificato nel
+registro di configurazione BAR0, sia $b$.
+
+Le periferiche \verb|ce| sono semplici periferiche di ingresso con un registro RBR (Receive Buffer Register),
+dal quale \`e possible leggere un byte.
+La periferica invia una richiesta di
+interruzione quando dispone di un nuovo byte; la richiesta rimane attiva fino a quando il byte non viene letto.
+
+Vogliamo fornire agli utenti un meccanismo di lettura {\em asincrono}. Gli utenti devono invocare una primitiva
+\verb|ceasyncread_n(id, buf, quanti)| che ordina il trasferimento di \verb|quanti| byte dalla periferica CE \verb|id|
+al buffer \verb|buf|. La primitiva non attende che il trasferimento sia concluso (e nemmeno che la periferica sia libera),
+ma si limita ad accodare la richiesta in una coda di trasferimenti della periferica e a restituire al chiamante un 
+{\em identificatore di trasferimento}, \verb|trid|. Il trasferimento verr\`a avviato
+non appena la periferica \`e libera. Nel frattempo, il processo utente pu\`o proseguire con altre azioni (eventualmente,
+anche con altre richieste di trasferimento, anche sulla stessa periferica). In un secondo momento, un processo
+(eventualmente anche diverso da quello che aveva iniziato il trasferimento) potr\`a attendere il termine del trasferimento
+invocando \verb|cewait(id, trid)|. I trasferimenti sono avviati nell'ordine in cui sono stati richiesti, ma i processi
+possono attendere la loro terminazione in qualunque ordine.
+
+Per realizzare il meccanismo definiamo le seguenti strutture dati:
+\begin{verbatim}
+struct des_ce_tr {
+    char *buf;
+    natl quanti;
+    natl next;
+};
+
+struct des_ce {
+    ioaddr iCTL, iSTS, iRBR;
+    des_ce_tr tr[MAX_CE_ASYNC];
+    natl cur;
+    natl last;
+    natl waiting;
+    natl sync;
+    natl mutex;
+};
+\end{verbatim}
+Il campo \verb|iCTL| contiene l'indirizzo del registro di controllo della periferica. Il bit 1 del registro
+abilita (se settato) o disabilita (se resettato) la periferica a inviare richieste di interruzione.
+Il campo \verb|iSTS| contiene l'indirizzo del registro di stato, che possiamo ignorare. Il campo \verb|iRBR|
+contiene l'indirizzo del registro di ingresso.
+
+L'array \verb|tr| contiene dei descrittori di trasferimento
+con indici da 0 a \verb|MAX_CE_ASYNC-1|. L'indice all'interno dell'array \verb|tr| funge da identificatore
+di trasferimento. Il campo \verb|cur| contiene l'indice del trasferimento attivo, o \verb|0xFFFFFFFF| se
+non vi sono trasferimenti attivi. Ogni descrittore \verb|des_ce_tr| contiene il puntatore \verb|buf|
+alla destinazione del prossimo byte da leggere, il numero \verb|quanti| di byte ancora da leggere, e l'indice
+\verb|next| del trasferimento da iniziare al termine di questo (\verb|0xFFFFFFFF| se non ve ne sono).
+Il capo \verb|last| contiene l'indice dell'ultimo trasferimento in \verb|tr|, in ordine di richiesta.
+Un descrittore di trasferimento \`e considerato
+libero se \verb|buf| \`e \verb|nullptr|. Se tutti i descrittori sono liberi, \verb|last| vale \verb|0xFFFFFFFF|.
+Se tutti i descrittori sono occupati (\verb|buf| diverso da \verb|nullptr|) non \`e possibile accettare nuove
+richieste. Un descrittore occupato si libera solo quando \verb|quanti| arriva a zero (tutti
+i byte sono stati trasferiti) e un processo invoca \verb|cewait()| sul suo identificatore.
+
+Il campo \verb|mutex| \`e l'indice di un semaforo di mutua esclusione da usare per proteggere gli accessi
+ai campi \verb|tr|, \verb|cur|, \verb|last| e \verb|waiting|. Il campo \verb|sync| contiene l'indice
+di un semaforo su cui si sospendono i processi che hanno invocato \verb|cewait()| su un trasferimento
+non ancora concluso. Il campo \verb|waiting| contiene il numero di processi sospesi su \verb|sync|.
+
+Aggiungiamo infine le seguenti primitive (abortiscono il processo in caso di errore):
+\begin{itemize}
+  \item \verb|natl ceasyncread_n(natl id, char *buf, natl quanti)|: accoda, ed eventualmente avvia, un
+  nuovo trasferimento e ne restituisce l'identificatore (\verb|0xFFFFFFFF| se non \`e possibile accodare).
+  \`E un errore se la periferica non esiste, se \verb|quanti| \`e zero, se ci sono problemi di Cavallo 
+  di Troia, se il buffer non si trova nella zona utente condivisa o non \`e scrivibile.
+  \item \verb|void cewait(natl id, natl trid)|: attende la terminazione del trasferimento \verb|trid|
+  sulla periferica \verb|id|. \`E un errore se la periferica non esiste o se l'identificatore \verb|trid|
+  non corrisponde ad un descrittore occupato.
+\end{itemize}
+
+Modificare il \verb|io.cpp| in modo da realizzare le parti mancanti.

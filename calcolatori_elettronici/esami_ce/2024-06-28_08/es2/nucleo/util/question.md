@@ -1,0 +1,81 @@
+Aggiungiamo al nucleo il meccanismo dei *checkpoint*.
+
+Il checkpoint di un processo è la foto del suo stato in un certo
+istante, dato dal contenuto dei registri del processore e contenuto di
+tutta la sua memoria privata. Nel nostro caso la memoria privata
+comprende la pila sistema e la pila utente, ma per evitare di dover
+rivelare il contenuto della pila sistema, permetteremo i checkpoint solo
+negli istanti in cui un processo sta per ritornare a livello utente (e
+dunque la sua pila sistema è vuota).
+
+Nel meccanismo che vogliamo realizzare, un processo (master) si prepara
+a ricevere i checkpoint da un altro processo (slave) tramite la
+primitiva `cp_prep(pid)`. La primitiva restituisce al master l'indirizzo
+a cui verrà salvato lo stato della memoria privata (pila utente, per
+quanto detto sopra) dello slave ad ogni checkpoint. Da quel momento in
+poi, ogni volta che lo slave sta per tornare a livello utente si dovrà
+sincronizzare con il master per trasferigli un nuovo checkpoint. Il
+master si può mettere in attesa del prossimo checkpoint tramite la
+primitiva `cp_get(regs)`, dove `regs` è un puntatore ad un vettore di 16
+`natq`, destinato a ricevere il contenuto dei registri dello slave. Dopo
+il trasferimento del checkpoint entrambi i processi ritornano pronti. La
+relazione di master/slave prosegue fino a quando uno dei due processi
+non termina. Ogni processo può essere al più master o slave di un altro
+processo.
+
+Per realizzare il meccanismo appena descritto introduciamo la seguente
+struttura dati:
+
+    struct des_cp {
+        natl master;
+        natl slave;
+        natq *cp_regs_master;
+        bool slave_waiting;
+        bool master_waiting;
+    };
+
+La struttura `des_cp` descrive lo stato di una coppia master/slave. Il
+campo `master` è l'id del processo master; il campo `slave` è l'id del
+processo slave; i campi `slave_waiting` e `master_waiting` valgono true
+se il corrispondente processo è in attesa di trasferire/ricevere un
+nuovo checkpoint; se il processo master è in attesa, il campo
+`cp_regs_master` contiene il campo `regs` che il master ha passato a
+`cp_get()`.
+
+Aggiungiamo anche il seguente campo ai descrittori di processo:
+
+        des_cp *cp;
+
+Nei processi che si trovano in relazione master/slave, questo campo
+punta ad un'istanza di `des_cp` (condivisa da entrambi i processi). Per
+i processi che non sono né master, né slave, questo campo è nullo.
+
+Aggiungiamo infine le seguenti primitive:
+
+-   `void* cp_prep(natl pid)` (già realizzata): registra il processo
+    chiamante come master del processo di identificatore `pid`, che
+    diventa slave. Il processo chiamante non deve essere già master e lo
+    slave deve essere un processo di livello utente diverso dal
+    chiamante; restituisce `nullptr` in caso di fallimento (il processo
+    chiamante è slave, il processo `pid` non esiste o è già slave o
+    master, qualche allocazione di memoria è fallita), altrimenti
+    restituisce l'indirizzo di una zona di memoria (nel master) pronta a
+    contenere lo stato della memoria privata dello slave.
+
+-   `bool cp_get(natq* regs)`: Il processo chiamante deve essere master.
+    Il master si pone in attesa del prossimo checkpoint da parte dello
+    slave. Quando la primitiva ritorna, `regs` contiene lo stato dei
+    registri, mentre lo stato della memoria privata si trova
+    all'indirizzo precedentemente ricevuto tramite `cp_prep()`. La
+    primitiva restituisce `false` se il processo slave è terminato prima
+    di poter inviare un checkpoint.
+
+Le primitive abortiscono il processo chiamante in caso di errore e
+tengono conto della priorità tra i processi. Si può assumere che la pila
+sistema occupi una singola pagina.
+
+Modificare il file `sistema.cpp` in modo da realizzare le parti
+mancanti.
+
+**Suggerimento**: per riconoscere quando un processo sta per tornare a
+livello utente ci si può ispirare alla funzione `liv_chiamante()`.

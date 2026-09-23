@@ -1,0 +1,204 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family:
+        -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+        Arial, sans-serif;
+    color: #ffffff;
+    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+    height: 100vh;
+    padding: 2rem;
+}
+#navbar {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    gap: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+    margin-bottom: 2rem;
+}
+#navbar a {
+    color: #fff;
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.3s ease;
+}
+/* Sezione invio richiesta */
+#send-request {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 20px 30px;
+    position: relative; /* necessario per dropdown */
+}
+
+#user-search {
+    padding: 8px 12px;
+    font-size: 16px;
+    border-radius: 8px;
+    border: none;
+    outline: none;
+    width: 250px;
+}
+
+#send-button {
+    padding: 8px 14px;
+    border: none;
+    border-radius: 8px;
+    background: rgba(0, 191, 255, 0.8);
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+        background 0.3s,
+        transform 0.2s;
+}
+
+#send-button:hover {
+    background: rgba(0, 191, 255, 1);
+    transform: translateY(-1px);
+}
+
+/* Dropdown autocomplete */
+#dropdown {
+    position: absolute;
+    top: 40px;
+    left: 0;
+    width: 250px;
+    background: rgba(255, 255, 255, 0.95);
+    color: #0f2027;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    max-height: 180px;
+    overflow-y: auto;
+    display: none;
+    z-index: 100;
+}
+
+#dropdown div {
+    padding: 8px 12px;
+    cursor: pointer;
+}
+
+#dropdown div:hover {
+    background-color: rgba(0, 191, 255, 0.2);
+}
+
+/* Titoli */
+h1 {
+    margin: 20px 30px 10px 30px;
+    font-size: 1.8rem;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+    padding-bottom: 5px;
+}
+
+/* Contenitori amici / richieste / richieste inviate */
+#sent-requests,
+#pending-requests,
+#friends-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin: 10px 30px 30px 30px;
+}
+
+/* Singolo elemento */
+#sent-requests div,
+#pending-requests div,
+#friends-container div {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 12px 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    transition:
+        transform 0.2s,
+        background 0.2s;
+}
+
+#sent-requests div:hover,
+#pending-requests div:hover,
+#friends-container div:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+}
+
+/* Testo username */
+#sent-requests span,
+#pending-requests span,
+#friends-container span {
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+/* Pulsanti */
+button {
+    padding: 6px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    border: none;
+    transition:
+        background 0.3s,
+        transform 0.2s;
+}
+
+/* Pulsanti Aggiungi */
+#add-button {
+    background: rgba(0, 191, 255, 0.8);
+    color: #0f2027;
+}
+
+#add-button:hover {
+    background: rgba(0, 191, 255, 1);
+    transform: translateY(-1px);
+}
+
+/* Pulsanti Elimina */
+#reject-button {
+    background: rgba(255, 69, 58, 0.8);
+    color: #fff;
+}
+
+#reject-button:hover {
+    background: rgba(255, 69, 58, 1);
+    transform: translateY(-1px);
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    #navbar {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    #send-request {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    #dropdown {
+        width: 100%;
+    }
+
+    button {
+        width: 100%;
+    }
+
+    #sent-requests div,
+    #pending-requests div,
+    #friends-container div {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+}

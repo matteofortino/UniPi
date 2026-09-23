@@ -1,0 +1,61 @@
+Usiamo un nucleo modificato per supportare lo
+swap-in e swap-out dei processi utente.  Un singolo processo utente
+pu\`o registrarsi come ``swapper'' e ottenere l'accesso alle primitive
+\verb|swap_out()| e \verb|swap_in()|.
+Lo swapper pu\`o, in qualunque momento, chiedere lo swap-out un
+altro processo invocando la primitiva \verb|swap_out()|, a cui passa
+l'id del processo vittima $P$ e un buffer in cui la primitiva copia
+il contenuto attuale della parte utente/privata di $P$. Il processo
+$P$ diventa ``rimosso''.
+In qualunque momento, lo swapper pu\`o
+invocare la primitiva \verb|swap_in()| che provvede a completare o
+ricaricare un processo. Nel caso di ricarica, lo swapper deve passare
+alla \verb|swap_in()| un buffer con il contenuto da ripristinare.
+
+Se un processo sta eseguendo una operazione di I/O in DMA da o verso
+un buffer nella sua memoria privata, non pu\`o essere rimosso fino
+a quando l'operazione non \`e stata completata. In questo caso
+diciamo che il processo \`e {\em residente} per tutta la durata
+dell'operazione. Le primitive di I/O devono comunicare al modulo
+sistema quando un processo diventa residente, o smette di esserlo,
+usando la nuova primitiva \verb|resident()| (accessibile solo
+dal modulo I/O). Se lo swapper invoca \verb|swap_out()| su
+un processo residente, lo swapper si sospende e la rimozione
+viene rimandata a quando il processo non sar\`a pi\`u residente.
+
+Per realizzare il meccanismo aggiungiamo i seguenti campi
+al descrittore di processo
+\begin{verbatim}
+    bool resident;
+    char* swap_out_buf;
+\end{verbatim}
+Il campo \verb|resitent| \`e true se e solo se il processo \`e residente.
+Il campo \verb|swap_out_buf| \`e diverso da \verb|nullptr| se lo swapper
+aveva tentato una \verb|swap_out()| su questo processo mentre era residente;
+in questo caso, contiene il puntatore \verb|buf| che lo swapper aveva
+passato a \verb|swap_out()|.
+
+Il pid dello swapper si trova nel campo \verb|swapper_info.id|.
+
+Aggiungiamo infine le seguenti primitive (abortiscono il processo
+in caso di errore):
+\begin{itemize}
+ \item \verb|swapper()| (gi\`a realizzata): registra il processo invocante come
+  swapper. \`E un errore se lo swapper esiste gi\`a.
+ \item \verb|bool swap_out(natl pid, char *buf)| (realizzata in parte):
+  esegue lo swap-out del processo \verb|pid|. Se il processo \verb|pid|
+  \`e residente, le operazioni della primitiva vengono rimandate
+  a quando \verb|pid| torner\`a non-residente; nel frattempo, il processo
+  swapper resta bloccato.
+ \item \verb|bool swap_in(natl pid, const char *buf)| (gi\`a realizzata)
+ esegue lo swap-in o il completamento del processo \verb|pid|.
+ \item \verb|resident(bool res)| (da realizzare): se \verb|res| \`e \verb|true|,
+ rende il processo invocante residente; se \verb|res| \`e \verb|false| rende
+ il processo invocante non pi\`u residente. Se il processo \`e gi\`a nello stato
+ richiesto, non fa niente. Si preoccupa di completare una eventuale
+ \verb|swap_out()| rimasta in sospeso.
+\end{itemize}
+Modificare i file \verb|sistema.cpp| \verb|sistema.s| in modo da realizzare le parti mancanti.
+{\bf Attenzione}: i file contengono altre strutture dati, funzioni e modifiche che
+sono utilizzate dallo swapper, ma possono essere ignorate (sono contrassegnate da parentesi
+quadre invece che tonde nei tag ESAME).

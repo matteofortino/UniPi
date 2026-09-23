@@ -1,0 +1,77 @@
+#!/usr/bin/perl -n
+# Convertire indirizzi in simbolo e/o file e numero di riga.
+#
+# Opera come un filtro tra stdin e stdout e si aspetta di ricevere in input il
+# log in formato 'livello id messaggio'. Cerca gli indirizzi in 'messaggio', ma
+# solo se il livello non è "USR". Interpreta come possibili indirizzi tutti i
+# numeri esadecimali che iniziano con 0x..., e usa addr2line per risolverli
+# usando le informazioni di debug contenute in debug/*. Se la risoluzione ha
+# successo, sostituisce il numero con la sua risoluzione.  Lascia tutto il
+# resto inalterato.
+
+
+# comandi eseguiti una volta sola all'inizio dello script
+BEGIN {
+	# setta il flush automatico su stdout
+	$| = 1;
+
+	# regexp per i numeri esadecimali
+	my $hex = qr/[a-fA-F0-9]/;
+	# array degli eseguibili contenuti in debug
+	my @exe = glob('debug/[0-9]-*');
+	# se lo script è stato lanciato da 'boot', CE_ADDR2LINE conterrà il
+	# valore impostato da libce
+	my $addr2line = $ENV{'CE_ADDR2LINE'} || 'addr2line';
+
+	# trova la funzione che contiene l'indirizzo passato come argomento.
+	# Restituisce il nome della funzione, o l'indirizzo stesso se non
+	# trovato
+	sub toLine($) {
+		my $h = shift;
+
+		my $s = "0x$h";
+		# prova a cercare l'indirizzo in ognuno degli eseguibili
+		# trovati nella directory debug
+		for my $e (@exe) {
+			# opzioni per addr2line:
+			#  -C 	demangle degli identificatori C++
+			#  -f	mostra la funzione a cui appartiene l'indirizzo
+			#  -e	cerca nell'eseguibile passato come argomento ($e)
+			my $out = `$addr2line -Cfe $e $h` || next;
+			chomp $out;
+			# l'output di addr2line è su più linee:
+			#   funzione	(oppure ??)
+			#   file:riga	(oppure ??)
+			my @lines = split(/\n/, $out);
+			# se la seconda linea contiene ??, l'indirizzo non è stato trovato
+			next if ($lines[1] =~ /^\?\?/);
+			# altrimenti costruiamo la stringa da restituire
+			$s = '';
+			# eliminiamo il path dal nome del file
+			$lines[1] =~ s#^.*/##;
+			# se è stata trovata anche la funzione, la scriviamo per prima
+			if ($lines[0] ne '??') {
+				$s .= $lines[0];
+			}
+			# aggiungiamo anche file:riga tra parentesi quadre
+			$s .= ' [' . $lines[1] . ']';
+		}
+		return $s;
+	}
+
+	# sostituisce tutti i numeri esadecimali di max 16 cifre
+	# con l'output di toLine()
+	sub decodeAddr($) {
+		my $s = shift;
+		$s =~ s#(?<!$hex)0x($hex{1,16})(?!$hex)#&toLine($1)#meg;
+		return $s;
+	}
+}
+
+# comandi eseguiti su ogni linea
+chomp;						# rimuovi il fine linea
+my ($level, $id, $msg) = split /\t/;		
+if ($level ne "USR") {				# ne: not equal
+	$msg = &decodeAddr($msg);
+}
+print "$level\t$id\t$msg\n";
