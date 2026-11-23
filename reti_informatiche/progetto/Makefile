@@ -1,16 +1,15 @@
-CC = gcc
-CFLAGS = -Wall -g -O2
-TARGETS = lavagna utente
+CC = gcc 
+CFLAGS = -Wall -Wextra 
 
-all: $(TARGETS)
 
-lavagna: lavagna.c common.h
-	$(CC) $(CFLAGS) -o lavagna lavagna.c
+all: coordinator storage io
+	@ mkdir -p storage_dir
 
-utente: utente.c common.h
-	$(CC) $(CFLAGS) -o utente utente.c
+coordinator: coordinator.c io/io.c
+	$(CC) $(CFLAGS) $^ -o $@
 
-clean:
-	rm -f $(TARGETS)
+storage: storage.c io/io.c
+	$(CC) $(CFLAGS) $^ -o $@
 
-.PHONY: all clean
+io: io/io.c 
+	$(CC) $(CFLAGS) $^ -o $@
