@@ -1,15 +1,21 @@
-CC = gcc 
-CFLAGS = -Wall -Wextra 
+CC = gcc
+CFLAGS = -std=c11 -Wall -Wextra -Wpedantic -O2
+PTHREAD = -pthread
+COMMON_SRC = io/io.c common/common.c
+COMMON_HEADERS = io/io.h common/common.h
+
+.PHONY: all clean
+all: coordinator storage # client
 
 
-all: coordinator storage io
-	@ mkdir -p storage_dir
+coordinator: coordinator.c coordinator.h handlers/handlers.c handlers/handlers.h $(COMMON_SRC) $(COMMON_HEADERS)
+	$(CC) $(CFLAGS) $(PTHREAD) coordinator.c handlers/handlers.c $(COMMON_SRC) -o $@
 
-coordinator: coordinator.c io/io.c
-	$(CC) $(CFLAGS) $^ -o $@
+storage: storage.c storage.h $(COMMON_SRC) $(COMMON_HEADERS)
+	$(CC) $(CFLAGS) $(PTHREAD) storage.c $(COMMON_SRC) -o $@
 
-storage: storage.c io/io.c
-	$(CC) $(CFLAGS) $^ -o $@
+# client: client.c $(COMMON) io/io.h protocol.h
+# 	$(CC) $(CFLAGS) $(PTHREAD) client.c $(COMMON) -o $@
 
-io: io/io.c 
-	$(CC) $(CFLAGS) $^ -o $@
+clean:
+	rm -f coordinator storage client

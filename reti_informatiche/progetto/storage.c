@@ -1,8 +1,13 @@
 #include "storage.h"
+#include "common/common.h"
 #include "io/io.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
+#include <arpa/inet.h>
+#include <string.h>
+#include <unistd.h>
 
 int directory_exists(const char *path) {
     struct stat sb;
@@ -18,20 +23,15 @@ int main(int argc, char **argv) {
         return EXIT_FAILURE;
     }
 
-    uint16_t coordinator_port = atoi(argv[1]);
-    if (coordinator_port < 1024) { // invalid coordinator port
-        printf("<coordinator_port> needs to be >= 1024\n");
+    uint16_t coordinator_port = 0;
+    if (parse_port(argv[1], &coordinator_port) != PROTO_OK || coordinator_port < 1024) {
+        printf("<coordinator_port> must be a valid port (1024-65535)\n");
         return EXIT_FAILURE;
     }
 
-    uint16_t storage_port = atoi(argv[2]);
-    if (storage_port < 1024) { // invalid storage port
-        printf("<storage_port> needs to be >= 1024\n");
-        return EXIT_FAILURE;
-    }
-
-    if (storage_port == coordinator_port) { // same ports
-        printf("<coordinator_port> needs to be different from <storage_port>\n");
+    uint16_t storage_port = 0;
+    if (parse_port(argv[2], &storage_port) != PROTO_OK || storage_port < 1024) {
+        printf("<storage_port> must be a valid port (1024-65535)\n");
         return EXIT_FAILURE;
     }
 
@@ -62,9 +62,15 @@ int main(int argc, char **argv) {
         return EXIT_FAILURE;
     }
 
-    char msg[256];
-    snprintf(msg, sizeof(msg), "REGISTER %d\n", storage_port);
-    send_all(coordinator_fd, msg, strlen(msg));
-    recv_control_msg(coordinator_fd, msg);
-    printf("Coordinator: %s", msg);
+    printf("Storage connesso\n");
+    char in_msg[MAX_LINE_LENGTH];
+    snprintf(in_msg, sizeof(in_msg), "REGISTER %d\n", storage_port);
+    send_all(coordinator_fd, in_msg, strlen(in_msg));
+
+    char out_msg[MAX_LINE_LENGTH];
+    if (recv_line(coordinator_fd, out_msg, sizeof(out_msg)) != IO_OK) {
+        close(coordinator_fd);
+        return EXIT_FAILURE;
+    }
+    printf("%s\n", out_msg);
 }
