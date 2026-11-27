@@ -1,5 +1,8 @@
 #include "io.h"
 #include "../common/common.h"
+#include "../handlers/handlers.h"
+
+#include <string.h>
 #include <errno.h>
 #include <string.h>
 
@@ -73,4 +76,10 @@ IoStatus send_error(int fd, ProtocolError err) {
     const char *err_msg = protocol_error_str(err);
 
     return send_all(fd, err_msg, strlen(err_msg));
+
+    int len = sizeof(err);
+    if (len < 0 || send_all(fd, err_msg, (size_t)len) != IO_OK) {
+        clear_storage(fd);
+        return -1;
+    }
 }

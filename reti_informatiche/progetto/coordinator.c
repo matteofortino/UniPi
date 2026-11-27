@@ -14,6 +14,7 @@
 pthread_mutex_t state_mutex;
 Storage storage[MAX_STORAGES];
 uint32_t storage_id = 1;
+File files[MAX_FILES];
 
 int main(int argc, char **argv) {
     if (argc != 2) {
@@ -83,6 +84,7 @@ void initialize_storage(Storage *storage) {
 }
 
 void *worker(void *arg) {
+    uint32_t my_id = 0;
     int storage_fd = *(int *)arg;
     free(arg);
 
@@ -120,8 +122,19 @@ void *worker(void *arg) {
         }
 
         if (request.command == CMD_REGISTER) {
-            uint32_t my_id;
+            if (my_id != 0) {
+                send_error(storage_fd, PROTO_ERR_BAD_REQUEST);
+                clear_storage(storage_fd);
+                break;
+            }
             handle_register(storage_fd, request.storage_port, &my_id);
+        } else if (request.command == CMD_STORED) {
+            if (my_id == 0) {
+                send_error(storage_fd, PROTO_ERR_BAD_REQUEST);
+                clear_storage(storage_fd);
+                break;
+            }
+            handle_stored(storage_fd, my_id, request.size, request.remote_name);
         }
     }
 

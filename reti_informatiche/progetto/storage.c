@@ -67,7 +67,17 @@ int main(int argc, char **argv) {
     snprintf(in_msg, sizeof(in_msg), "REGISTER %d\n", storage_port);
     send_all(coordinator_fd, in_msg, strlen(in_msg));
 
+    printf("REGISTER SENT\n");
     char out_msg[MAX_LINE_LENGTH];
+    if (recv_line(coordinator_fd, out_msg, sizeof(out_msg)) != IO_OK) {
+        close(coordinator_fd);
+        return EXIT_FAILURE;
+    }
+    printf("%s\n", out_msg);
+    snprintf(in_msg, sizeof(in_msg), "STORED ciao cane di dio\n");
+    send_all(coordinator_fd, in_msg, strlen(in_msg));
+
+    printf("STORED SENT\n");
     if (recv_line(coordinator_fd, out_msg, sizeof(out_msg)) != IO_OK) {
         close(coordinator_fd);
         return EXIT_FAILURE;
